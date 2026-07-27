@@ -1,38 +1,40 @@
 import matplotlib.pyplot as plt
 
-def plot_bar_chart(distribution):
+def plot_charts(distribution):
+	fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(10,4))
+	plot_bar_chart(ax1, distribution)
+	plot_pie_chart(ax2, distribution)
+
+	fig.suptitle('Dataset Distribution')
+
+	plt.tight_layout()
+	plt.show()
+
+def plot_bar_chart(ax, distribution):
 	"""
 	Plots image counts by class in bar chart
 
 	Args:
+	    ax (matplotlib.axes.Axes): Axes to draw on.
 		distribution (dict): Dictionary of {directory-name: image count}
 	"""
-	plt.figure(figsize=(8,5))
+	ax.bar(distribution.keys(), distribution.values())
 
-	plt.bar(distribution.keys(), distribution.values())
+	ax.set_title('Counts')
+	ax.set_xlabel('Class')
+	ax.tick_params(axis='x', labelrotation=45)
+	ax.set_ylabel('Number of Images')
 
-	plt.title('Dataset Distribution by Counts')
-	plt.xlabel('Class')
-	plt.xticks(rotation=45)
-	plt.ylabel('Number of Images')
 
-	plt.tight_layout()
-
-	plt.show()
-
-def plot_pie_chart(distribution):
+def plot_pie_chart(ax, distribution):
 	"""
 	Plot class distribution in pie chart
 	
 	Args:
+	    ax (matplotlib.axes.Axes): Axes to draw on.
 		distribution (dict): Dictionary of {directory-name: image count}
 	"""
-	plt.figure(figsize=(6,6))
+	ax.pie(distribution.values(), labels=distribution.keys(), autopct="%.1f%%", startangle=90)
 
-	plt.pie(distribution.values(), labels=distribution.keys(), autopct="%.1f", startangle=90)
-
-	plt.title('Dataset Distribution (%)')
-
-	plt.tight_layout()
-
-	plt.show()
+	ax.set_title('Proportions (%)')
+	ax.axis("equal")

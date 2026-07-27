@@ -2,7 +2,7 @@ import argparse
 
 from analysis.validation import validate_directory
 from analysis.analysis import analyse_directory
-from analysis.visualisation import plot_bar_chart, plot_pie_chart
+from analysis.visualisation import plot_charts
 
 def parse_args():
 	"""
@@ -32,8 +32,7 @@ def main():
 
 	distribution = analyse_directory(args.directory)
 
-	plot_bar_chart(distribution)
-	plot_pie_chart(distribution)
+	plot_charts(distribution)
 
 if __name__ == "__main__":
 	main()
