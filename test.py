@@ -1,1 +1,0 @@
-print("raghda is stressed".find("raghda"))
