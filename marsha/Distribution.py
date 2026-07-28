@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 
 from analysis.validation import validate_directory
