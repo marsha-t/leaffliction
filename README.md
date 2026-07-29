@@ -34,3 +34,9 @@ Run the dataset analysis on a plant directory.
 ./Distribution.py data/Apple
 ./Distribution.py ./data/Apple
 ```
+
+Apply augmentations on an image
+
+```bash
+./Augmentation.py 'data/Apple/Apple_Black_rot/image (1).JPG'
+```

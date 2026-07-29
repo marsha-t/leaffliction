@@ -15,7 +15,7 @@ def crop(image: Image.Image, box: CropBox) -> Image.Image:
         box (CropBox): (left, upper, right, lower)
 
     Returns:
-        Image.Image: new Image object
+        Image.Image: new cropped object
 
     Raises:
         ValueError:

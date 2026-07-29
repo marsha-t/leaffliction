@@ -3,6 +3,8 @@ from PIL import Image
 import argparse
 import numpy as np
 
+from augmentation import crop, shear
+
 
 def load_img(path):
     """
@@ -34,8 +36,15 @@ def parse_args():
 def main():
     try:
         args = parse_args()
-        img_array = load_img(args.image_path)
-        print(img_array.shape)
+        # img_array = load_img(args.image_path)
+        # print(img_array.shape)
+
+        # img = Image.open(args.image_path)
+        # augmented = crop(img, (0, 0, 100, 100))
+        # augmented = shear(img, 0, horizontal=True)
+        # augmented = shear(img, 0.3, horizontal=True)
+        # augmented.show()
+
     except Exception as e:
         print("there is an issue :", e)
 
