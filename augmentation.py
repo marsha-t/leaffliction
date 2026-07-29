@@ -2,7 +2,7 @@
 from PIL import Image
 import argparse
 import numpy as np
-from augmentation import Flip
+from Augmentation import flip
 
 def load_img(path):
     """
@@ -35,7 +35,7 @@ def main():
     try:
         args = parse_args()
         img_array = load_img(args.image_path)
-        Flip.visualize(img_array)
+        flip.visualize(img_array)
 
         print(img_array.shape)
     except Exception as e:
