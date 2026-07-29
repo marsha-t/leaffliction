@@ -2,7 +2,7 @@
 from PIL import Image
 import argparse
 import numpy as np
-from Augmentation import flip , rotate
+from Augmentation import flip , rotate, skew
 
 
 def load_img(path):
@@ -38,6 +38,7 @@ def main():
         img = load_img(args.image_path)
         flip.flip(img, "v")
         rotate.rotate(img, 90)
+        skew.skew(img)
 
         # print(img_array.shape)
     except Exception as e:
