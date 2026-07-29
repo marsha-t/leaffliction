@@ -2,7 +2,8 @@
 from PIL import Image
 import argparse
 import numpy as np
-from Augmentation import flip
+from Augmentation import flip , rotate
+
 
 def load_img(path):
     """
@@ -14,8 +15,8 @@ def load_img(path):
             array of the image
 """
     img = Image.open(path)
-    image_array = np.array(img)
-    return (image_array)
+    # image_array = np.array(img)
+    return (img)
 
 
 def parse_args():
@@ -34,10 +35,11 @@ def parse_args():
 def main():
     try:
         args = parse_args()
-        img_array = load_img(args.image_path)
-        flip.visualize(img_array)
+        img = load_img(args.image_path)
+        flip.flip(img, "v")
+        rotate.rotate(img, 90)
 
-        print(img_array.shape)
+        # print(img_array.shape)
     except Exception as e:
         print("there is an issue :", e)
 
