@@ -25,7 +25,7 @@ def distortion(
     """
 
     image_array = np.array(image)
-    print(image_array.shape)
+
     rng  = np.random.default_rng(seed)
     dx = rng.uniform(-1, 1, size=image_array.shape[:2])
     dy = rng.uniform(-1, 1, size=image_array.shape[:2])
@@ -35,7 +35,6 @@ def distortion(
 
     dx *= alpha
     dy *= alpha
-    x, y = np.meshgrid(np.arange(image_array.shape[1] - 1), np.arange(image_array.shape[0] - 1))
     x, y = np.meshgrid(np.arange(image_array.shape[1]), np.arange(image_array.shape[0]))
 
     new_x = x + dx
