@@ -3,7 +3,7 @@ from PIL import Image
 import argparse
 import numpy as np
 
-from augmentation import crop, shear
+from augmentation import crop, shear, distortion
 
 
 def load_img(path):
@@ -39,11 +39,12 @@ def main():
         # img_array = load_img(args.image_path)
         # print(img_array.shape)
 
-        # img = Image.open(args.image_path)
+        img = Image.open(args.image_path)
         # augmented = crop(img, (0, 0, 100, 100))
         # augmented = shear(img, 0, horizontal=True)
         # augmented = shear(img, 0.3, horizontal=True)
-        # augmented.show()
+        augmented = distortion(img)
+        augmented.show()
 
     except Exception as e:
         print("there is an issue :", e)
