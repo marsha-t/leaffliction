@@ -3,7 +3,15 @@ from PIL import Image
 import argparse
 from pathlib import Path
 
-from augmentation import crop, shear, distortion, flip, rotate, skew
+from augmentation import (
+    flip,
+    rotate,
+    shear,
+    skew,
+    crop,
+    elastic_distortion,
+    grid_distortion
+)
 
 
 def parse_args():
@@ -61,14 +69,15 @@ def main():
             ('Skew', skew),
             ('Shear', lambda image: shear(image, 0.3, horizontal=True)),
             ('Crop', lambda image: crop(image, (0, 0, 100, 100))),
-            ('Distortion', distortion)
+            ('ElasticDistortion', lambda image: elastic_distortion(image)),
+            ('GridDistortion', lambda image: grid_distortion(image, 4, 30))
         ]
 
         with Image.open(args.image_path) as image:
             for name, function in augmentations:
                 augmented = function(image)
-                # augmented.show()
-                save_augmented_image(augmented, args.image_path, name)
+                augmented.show()
+                # save_augmented_image(augmented, args.image_path, name)
 
     except Exception as e:
         print("there is an issue :", e)

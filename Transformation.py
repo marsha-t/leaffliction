@@ -3,8 +3,16 @@ from PIL import Image
 import argparse
 import cv2
 
-from transformation.segmentation import create_leaf_mask, extract_roi
-# from transformation.analysis import largest_contour, measure_leaf, compute_landmarks, colour_histogram
+from transformation.segmentation import (
+    create_leaf_mask,
+    largest_contour,
+    extract_roi
+)
+# from transformation.analysis import (
+#     measure_leaf,
+#     compute_landmarks,
+#     colour_histogram
+# )
 from transformation.visualisation import display_pipeline
 
 
@@ -34,8 +42,8 @@ def transformation_pipeline(image):
     blurred = cv2.GaussianBlur(image, (5, 5), 0)
 
     mask = create_leaf_mask(blurred)
-    roi = extract_roi(mask)
-    # contour = largest_contour(mask)  # TODO refactor so that roi uses this first
+    contour = largest_contour(mask)
+    roi = extract_roi(contour)
     # measurements = measure_leaf(contour)
     # landmarks = compute_landmarks(contour)
     # histogram = colour_histogram(roi)

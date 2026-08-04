@@ -14,7 +14,7 @@ def create_leaf_mask(image):
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
     # TODO consider adding morphological operations to tidy up mask
     # kernel = np.ones((5, 5), np.uint8)
@@ -24,21 +24,35 @@ def create_leaf_mask(image):
     return mask
 
 
-def extract_roi(mask):
+def largest_contour(mask):
     """
-    Extract leaf ROI from mask
+    Find the largest external contour in a binary mask
 
     Args:
-        mask (np.ndarray): binary mask of leaf
+        mask (np.ndarray): Binary mask containing the segmented leaf
+
+    Returns:
+        np.ndarray: Contour with the largest area
+    """
+    contours, _ = cv2.findContours(
+            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+
+    largest = max(contours, key=cv2.contourArea)
+
+    return largest
+
+
+def extract_roi(contour):
+    """
+    Extract leaf ROI from contour (bounding rectangle)
+
+    Args:
+        contour (np.ndarray): Contour outlining the leaf
 
     Returns:
         tuple[int, int, int, int]: bounding rectangle of ROI
             (x, y, width, height)
     """
-    contours, _ = cv2.findContours(
-        mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-    )
-
-    largest = max(contours, key=cv2.contourArea)
-
-    return cv2.boundingRect(largest)
+    
+    return cv2.boundingRect(contour)
