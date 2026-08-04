@@ -1,24 +1,9 @@
 #! /usr/bin/env python3
 from PIL import Image
 import argparse
-import numpy as np
 from pathlib import Path
 
 from augmentation import crop, shear, distortion
-
-
-def load_img(path):
-    """
-        load the image
-
-        Args:
-            path : image path
-        Return:
-            array of the image
-"""
-    img = Image.open(path)
-    image_array = np.array(img)
-    return (image_array)
 
 
 def parse_args():
@@ -36,14 +21,14 @@ def parse_args():
 
 def save_augmented_image(image, path, name):
     """
-    Save augmented image in original data folder and in 
+    Save augmented image in original data folder and in
         augmented_directory folder
-    
+
     Args:
         image (Image.Image): augmented image
         path (str): filepath of original image
         name (str): augmentation type
-    
+
     Raises:
         ValueError if input file does not come from /data
     """
@@ -83,7 +68,7 @@ def main():
             for name, function in augmentations:
                 augmented = function(image)
                 # augmented.show()
-                save_augmented_image(augmented, args.image_path, name)        
+                save_augmented_image(augmented, args.image_path, name)
 
     except Exception as e:
         print("there is an issue :", e)
