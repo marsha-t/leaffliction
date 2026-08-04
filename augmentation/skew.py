@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 from PIL import Image
 
 
@@ -17,9 +16,4 @@ def skew(img):
             skewed pillow image
     """
     skewed_img = img.transform(img.size, Image.AFFINE, (1,0, 0,0.5,1,0))
-    fig, plots = plt.subplots(nrows=1, ncols=2, figsize=(15, 2))
-    plots[0].imshow(img)
-    plots[0].set_title("original")
-    plots[1].imshow(skewed_img)
-    plots[1].set_title("skewing")
-    plt.show()
+    return skewed_img

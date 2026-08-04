@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 from PIL import Image
 
 
@@ -18,11 +17,6 @@ def flip(img, flip_type="h"):
         flipped_img = img.transpose(Image.FLIP_TOP_BOTTOM)
     else:
         flipped_img = img.transpose(Image.FLIP_LEFT_RIGHT)
-    fig, plots = plt.subplots(nrows=1, ncols=2, figsize=(15, 2))
-    plots[0].imshow(img)
-    plots[0].set_title("original")
-    plots[1].imshow(flipped_img)
-    plots[1].set_title("horizontal_flipped")
     return (flipped_img)
 
 
