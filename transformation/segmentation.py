@@ -56,3 +56,12 @@ def extract_roi(contour):
     """
     
     return cv2.boundingRect(contour)
+
+
+
+
+
+# def create_leaf_mask_plantCv(image):
+
+def planCv Gussian_blur():
+    

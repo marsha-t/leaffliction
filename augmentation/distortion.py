@@ -59,14 +59,24 @@ def elastic_distortion(
 
 
 def grid_distortion(img, grid_size, strength):
+    """
+     Implement grid distortion
+        - Applied grid-based image distortion by dividing the image into an
+          N×N grid and randomly displacing grid points to create smooth
+          geometric deformations.
+    
+        Args:
+            image (Image.Image): Pillow image
+            grid_size : how many cells you want along each dimension.
+            strength: is the range of how much you want to move the grid
+    
+        Returns:
+            Image.Image: Distorted image.
+    """
 
     img_arr = np.array(img)
 
     height, width = img_arr.shape[:2]
-
-    # Divide image into grids
-    cell_height = height / grid_size
-    cell_width = width / grid_size
 
     # Grid points
     x_points = np.linspace(0, width - 1, grid_size + 1)
