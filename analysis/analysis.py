@@ -3,6 +3,7 @@ from collections import defaultdict
 
 IMAGE_EXTENSIONS = ('.jpg', '.png')
 
+
 def analyse_directory(path: str) -> dict[str, int]:
 	"""
 	Count image files in each sub-directory 
