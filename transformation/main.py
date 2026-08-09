@@ -81,11 +81,6 @@ def main():
         axes[3].axis("off")
 
         plt.tight_layout()
-
-        # Save the comparison image
-        plt.savefig("gaussian_blur_comparison.png", dpi=300)
-
-        # Show the figure
         plt.show()
     except Exception as e :
         print ("there is an error ", e)

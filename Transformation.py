@@ -8,11 +8,11 @@ from transformation.segmentation import (
     largest_contour,
     extract_roi
 )
-# from transformation.analysis import (
-#     measure_leaf,
-#     compute_landmarks,
-#     colour_histogram
-# )
+from transformation.analysis import (
+    measure_leaf,
+    compute_landmarks,
+    # colour_histogram
+)
 from transformation.visualisation import display_pipeline
 
 
@@ -44,17 +44,17 @@ def transformation_pipeline(image):
     mask = create_leaf_mask(blurred)
     contour = largest_contour(mask)
     roi = extract_roi(contour)
-    # measurements = measure_leaf(contour)
-    # landmarks = compute_landmarks(contour)
+    measurements = measure_leaf(contour)
+    landmarks = compute_landmarks(contour, 50)
     # histogram = colour_histogram(roi)
 
     pipeline = {
         "blur": blurred,
         "mask": mask,
         "roi": roi,
-        # "contour": contour,
-        # "measurements": measurements,
-        # "landmarks": landmarks,
+        "contour": contour,
+        "measurements": measurements,
+        "landmarks": landmarks,
         # "histogram": histogram
     }
     return pipeline
@@ -68,10 +68,13 @@ def main():
         if image is None:
             raise FileNotFoundError(f"Could not read image: {args.image_path}")
         pipeline = transformation_pipeline(image)
+        # print("image contents", pipeline.keys())
         display_pipeline(image, pipeline)
 
     except Exception as e:
         print("there is an issue :", e)
+        # there is issues when we use this approach sometme i cant know the source of the issue 
+        # ex: there is an issue : max() iterable argument is empty
 
 
 if __name__ == "__main__":
