@@ -11,7 +11,7 @@ from transformation.segmentation import (
 from transformation.analysis import (
     measure_leaf,
     compute_landmarks,
-    # colour_histogram
+    colour_histogram
 )
 from transformation.visualisation import display_pipeline
 
@@ -46,7 +46,7 @@ def transformation_pipeline(image):
     roi = extract_roi(contour)
     measurements = measure_leaf(contour)
     landmarks = compute_landmarks(contour, 50)
-    # histogram = colour_histogram(roi)
+    histogram = colour_histogram(image)
 
     pipeline = {
         "blur": blurred,
@@ -55,7 +55,7 @@ def transformation_pipeline(image):
         "contour": contour,
         "measurements": measurements,
         "landmarks": landmarks,
-        # "histogram": histogram
+        "histogram": histogram
     }
     return pipeline
 

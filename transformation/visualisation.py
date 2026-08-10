@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def draw_mask(image, mask):
@@ -94,7 +95,6 @@ def draw_analysis(image, contour, measurements):
     return analyzed
 
 
-
 def draw_landmarks(image, landmarks):
     """
     Draw pseudolandmarks on image
@@ -125,7 +125,7 @@ def draw_landmarks(image, landmarks):
     return img
 
 
-def plot_histogram(img):
+def plot_histogram(img, histogram_data):
     """
     Visualise colour histogram
 
@@ -136,139 +136,30 @@ def plot_histogram(img):
         None
 
     """
-   
-    width = 700
-    height = 500
-    hist_img = np.ones(
-        (height, width, 3),
+    frequencies = histogram_data["frequencies"]
+    bar_colors = histogram_data["bar_colors"]
+    img_height, img_width = img.shape[:2]
+
+    fig, ax = plt.subplots(
+        figsize=(img_width / 100, img_height / 100),
+        dpi=100
+    )
+    ax.bar(frequencies.keys(), frequencies.values(), color=bar_colors)
+    ax.set_ylabel("")
+    ax.set_xlabel("")
+    ax.set_yticks([])
+    ax.set_xticks([])
+    ax.grid(False)
+
+    fig.canvas.draw()
+    width, height = fig.canvas.get_width_height()
+    hist_img = np.frombuffer(
+        fig.canvas.buffer_rgba(),
         dtype=np.uint8
-    ) * 255
-    histograms = []
-
-    for channel in range(3):
-        hist = cv2.calcHist(
-            [img],
-            [channel],
-            None,
-            [256],
-            [0, 256]
-        )
-
-        hist = cv2.normalize(
-            hist,
-            None,
-            0,
-            height - 80,
-            cv2.NORM_MINMAX
-        )
-
-        histograms.append(hist.flatten())
-    left = 60
-    bottom = height - 50
-    top = 30
-    right = width - 20
-    for y in range(top, bottom + 1, 50):
-        cv2.line(
-            hist_img,
-            (left, y),
-            (right, y),
-            (220, 220, 220),
-            1
-        )
-    for x in range(left, right + 1, 50):
-        cv2.line(
-            hist_img,
-            (x, top),
-            (x, bottom),
-            (220, 220, 220),
-            1
-        )
-    cv2.line(
-        hist_img,
-        (left, top),
-        (left, bottom),
-        (0, 0, 0),
-        2
-    )
-
-    cv2.line(
-        hist_img,
-        (left, bottom),
-        (right, bottom),
-        (0, 0, 0),
-        2
-    )
-    colors = [
-        (255, 0, 0),   
-        (0, 255, 0),   
-        (0, 0, 255)    
-    ]
-
-    for hist, color in zip(histograms, colors):
-
-        for i in range(1, 256):
-
-            x1 = int(
-                left + (i - 1) * (right - left) / 256
-            )
-
-            x2 = int(
-                left + i * (right - left) / 256
-            )
-
-            y1 = bottom - int(hist[i - 1])
-            y2 = bottom - int(hist[i])
-
-            cv2.line(
-                hist_img,
-                (x1, y1),
-                (x2, y2),
-                color,
-                2
-            )
-    for value in range(0, 256, 50):
-
-        x = int(
-            left + value * (right - left) / 256
-        )
-
-        cv2.putText(
-            hist_img,
-            str(value),
-            (x - 10, bottom + 25),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (0, 0, 0),
-            1
-        )
-    cv2.putText(
-        hist_img,
-        "Pixel Value",
-        (300, height - 10),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.6,
-        (0, 0, 0),
-        1
-    )
-
-    cv2.putText(
-        hist_img,
-        "Frequency",
-        (5, 25),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.5,
-        (0, 0, 0),
-        1
-    )
-    cv2.putText(
-        hist_img,
-        "Color Histogram",
-        (250, 25),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.7,
-        (0, 0, 0),
-        2
-    )
+    ).reshape(height, width, 4)
+    hist_img = cv2.cvtColor(hist_img, cv2.COLOR_RGBA2BGR)
+    plt.close(fig)
+    hist_img = cv2.resize(hist_img, (width, height))
     return hist_img
 
 
@@ -296,11 +187,10 @@ def display_pipeline(original_image, pipeline):
     images['landmarks'] = draw_landmarks(
       original_image, pipeline['landmarks']
     )
-    images['color_histogram'] = plot_histogram(original_image)
+    images['color_histogram'] = plot_histogram(original_image, pipeline["histogram"])
     # TODO this currently opens each image in a separate window. Fix to show everything in one window
     for name, image in images.items():
         cv2.imshow(name, image)
         cv2.waitKey(0)  # wait indefinitely until key press
         cv2.destroyAllWindows()  # close all windows
 
-    # plot_histogram(pipeline['histogram'])

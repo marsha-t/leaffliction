@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 
+
 def measure_leaf(contour):
     """
      Calculate some of the image measurements such as
@@ -75,3 +76,45 @@ def compute_landmarks(contour, n_landmarks):
     landmarks["center"] = center
     return landmarks
 
+
+def colour_histogram(img):
+    """
+        Compute the image colors frequencies
+        Args:
+        image (np.ndarray): original image (in BGR)
+    
+        Returns :
+        histogram data: dict that contain the frequencies and the colors we want to plot
+    """
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    pixels = hsv.reshape(-1, 3)
+    hue = pixels[:, 0]
+    ranges = {
+        "red": (0, 10),
+        "orange": (11, 25),
+        "yellow": (26, 35),
+        "green": (36, 85),
+        "cyan": (86, 100),
+        "blue": (101, 130),
+        "purple": (131, 160),
+        "pink": (161, 179)
+            }
+    frequencies = {}
+
+    for color, (low, high) in ranges.items():
+        mask = (hue >= low) & (hue <= high)
+        frequencies[color] = np.sum(mask)
+    bar_colors = [
+        "red",
+        "orange",
+        "yellow",
+        "green",
+        "cyan",
+        "blue",
+        "purple",
+        "pink"
+    ]  
+    histogram_data = {}
+    histogram_data["frequencies"] = frequencies
+    histogram_data["bar_colors"] = bar_colors
+    return histogram_data
