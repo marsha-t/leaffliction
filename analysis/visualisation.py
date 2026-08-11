@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+
 def plot_charts(distribution):
 	fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(10,4))
 	plot_pie_chart(ax1, distribution)

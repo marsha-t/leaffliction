@@ -3,15 +3,14 @@ from PIL import Image
 import argparse
 from pathlib import Path
 
-from augmentation import (
-    flip,
-    rotate,
-    shear,
-    skew,
-    crop,
-    elastic_distortion,
-    grid_distortion
+from analysis import analyse_directory, plot_charts
+from augmentation.constants import AUGMENTATIONS
+from augmentation.dataset import (
+    scan_dataset,
+    calculate_target,
+    execute_augmentation_plan
 )
+from augmentation.io import save_augmented_image, is_augmented_image
 
 
 def parse_args():
@@ -27,57 +26,52 @@ def parse_args():
     return args
 
 
-def save_augmented_image(image, path, name):
+def augment_image(path):
     """
-    Save augmented image in original data folder and in
-        augmented_directory folder
+    Apply all supported augmentations to a single image and
+    saves results in both the source directory and /augmented_dataset directory
 
     Args:
-        image (Image.Image): augmented image
-        path (str): filepath of original image
-        name (str): augmentation type
+        path (Path): Path to the original image
 
     Raises:
-        ValueError if input file does not come from /data
+        ValueError: If the input image has already been augmented
     """
-    original_path = Path(path)
-    stem = original_path.stem
-    suffix = original_path.suffix
-    filename = f"{stem}_{name}{suffix}"
+    if is_augmented_image(path):
+        raise ValueError(
+            f"{path.name} appears to already be an augmented image"
+        )
 
-    # Save in /data
-    input_dir = original_path.parent
-    image.save(input_dir / filename)
+    with Image.open(path) as image:
+        for name, function in AUGMENTATIONS:
+            augmented = function(image)
+            # augmented.show()
+            save_augmented_image(augmented, path, name)
 
-    # Save in /augmented_directory
-    try:
-        relative_dir = original_path.parent.relative_to('data')
-    except ValueError:
-        raise ValueError('Input image must be inside /data')
-    output_dir = Path('augmented_directory') / relative_dir
-    output_dir.mkdir(parents=True, exist_ok=True)
-    image.save(output_dir / filename)
+
+def augment_directory(root):
+    """
+    Balance dataset using image augmentation
+
+    Args:
+        root (Path): Root directory of the dataset
+    """
+    dataset = scan_dataset(root)
+    plan = calculate_target(dataset) 
+    execute_augmentation_plan(dataset, plan)
+    distribution = analyse_directory(root)
+    plot_charts(distribution)
 
 
 def main():
     try:
         args = parse_args()
 
-        augmentations = [
-            ('Flip', lambda image: flip(image, 'v')),
-            ('Rotate', lambda image: rotate(image, 90)),
-            ('Skew', skew),
-            ('Shear', lambda image: shear(image, 0.3, horizontal=True)),
-            ('Crop', lambda image: crop(image, (0, 0, 100, 100))),
-            ('ElasticDistortion', lambda image: elastic_distortion(image)),
-            ('GridDistortion', lambda image: grid_distortion(image, 4, 30))
-        ]
-
-        with Image.open(args.image_path) as image:
-            for name, function in augmentations:
-                augmented = function(image)
-                augmented.show()
-                # save_augmented_image(augmented, args.image_path, name)
+        path = Path(args.image_path)
+        if path.is_file():
+            augment_image(path)
+        elif path.is_dir():
+            augment_directory(path)
 
     except Exception as e:
         print("there is an issue :", e)

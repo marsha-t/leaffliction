@@ -41,7 +41,14 @@ Apply augmentations on an image
 ./Augmentation.py 'data/Apple/Apple_Black_rot/image (1).JPG'
 ```
 
+Create a balanced dataset with augmentations
+
+```bash
+python ./Augmentation.py 'data/Apple/'
+```
+
 Apply transformations on an image
+
 ```bash
 ./Transformation.py 'data/Apple/Apple_Black_rot/image (1).JPG'
 ```

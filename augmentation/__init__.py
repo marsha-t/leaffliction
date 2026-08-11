@@ -1,6 +1,20 @@
-from .crop import crop
-from .shear import shear
-from .distortion import elastic_distortion, grid_distortion
-from .flip import flip
-from .rotate import rotate
-from .skew import skew
+from .operations import (
+    crop,
+    shear,
+    flip,
+    rotate,
+    skew,
+    elastic_distortion,
+    grid_distortion
+)
+from .dataset import (
+    scan_dataset,
+    calculate_target,
+    execute_augmentation_plan
+)
+from .io import (
+    augmented_paths,
+    save_augmented_image,
+    is_augmented_image,
+    remove_empty_parents
+)
