@@ -4,20 +4,28 @@ from augmentation.constants import AUGMENTATIONS
 
 
 def augmented_paths(
-    original_path: Path,
-    augmentation_name: str
+    original_path,
+    augmentation_name,
+    data_root=Path('data'),
+    augmented_root=Path('augmented_directory')
 ) -> tuple[Path, Path]:
     """
     Return the paths where an augmented image should be stored
 
     Args:
-        original_path (Path): Path to the original image
+        original_path (str or Path): Path to the original image
         augmentation_name (str): Name of the augmentation
+        data_root (str or Path): Path to root of dataset
+        augmented_root (str or Path): Path to augmented directory
 
     Returns:
         tuple[Path, Path]:
             (path in original dataset, path in augmented_directory)
     """
+    original_path = Path(original_path).resolve()
+    data_root = Path(data_root).resolve()
+    augmented_root = Path(augmented_root).resolve()
+    
     filename = (
         f"{original_path.stem}_"
         f"{augmentation_name}"
@@ -25,18 +33,19 @@ def augmented_paths(
     )
 
     original_output = original_path.parent / filename
-
-    relative_dir = original_path.parent.relative_to("data")
-    augmented_output = (
-        Path("augmented_directory")
-        / relative_dir
-        / filename
-    )
+    relative_dir = original_path.parent.relative_to(data_root)
+    augmented_output = augmented_root / relative_dir / filename
 
     return original_output, augmented_output
 
 
-def save_augmented_image(image, path, name):
+def save_augmented_image(
+    image,
+    path,
+    name,
+    data_root=Path('data'),
+    augmented_root=Path('augmented_directory')
+):
     """
     Save augmented image in original data folder and in
         augmented_directory folder
@@ -45,14 +54,19 @@ def save_augmented_image(image, path, name):
         image (Image.Image): augmented image
         path (str): filepath of original image
         name (str): augmentation type
+        data_root (str or Path): Path to root of dataset
+        augmented_root (str or Path): Path to augmented directory
 
     Raises:
         ValueError if input file does not come from /data
     """
     original_output, augmented_output = augmented_paths(
         path,
-        name
+        name,
+        data_root,
+        augmented_root,
     )
+    
     # Save in /data
     image.save(original_output)
 

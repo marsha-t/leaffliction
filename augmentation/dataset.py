@@ -1,5 +1,6 @@
 import random
 from PIL import Image
+from pathlib import Path
 
 from analysis import validate_directory
 from augmentation.constants import AUGMENTATIONS
@@ -18,6 +19,7 @@ def scan_dataset(root):
         dict: Mapping of class names to dictionaries: 
             {original image paths: sets of augmentation names}
     """
+    root = Path(root).resolve()
     validate_directory(root)
     dataset = {}
     augmentation_names = {name for name, _ in AUGMENTATIONS}

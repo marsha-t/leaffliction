@@ -5,6 +5,7 @@ from pathlib import Path
 from augmentation.dataset import scan_dataset
 from augmentation.io import augmented_paths, remove_empty_parents
 
+
 def parse_args():
     """
     Parse command-line arguments
@@ -24,6 +25,8 @@ def main():
 
         path = Path(args.directory_path)
         dataset = scan_dataset(path)
+        augmented_root = Path('augmented_directory').resolve()
+
         for class_name in dataset:
             removed = 0
             images = dataset[class_name]
@@ -33,7 +36,9 @@ def main():
                 for augmentation_name in augmentations:
                     original_output, augmented_output = augmented_paths(
                         image,
-                        augmentation_name
+                        augmentation_name,
+                        data_root=Path('data'),
+                        augmented_root=augmented_root,
                     )
                     if original_output.exists():
                         original_output.unlink()
@@ -43,7 +48,7 @@ def main():
                         augmented_output.unlink()
                         remove_empty_parents(
                             augmented_output,
-                            Path("augmented_directory")
+                            augmented_root
                         )
             print(f"Removed {removed} augmentations for {class_name}")
     except Exception as e:
