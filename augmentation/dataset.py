@@ -4,20 +4,34 @@ from pathlib import Path
 
 from analysis import validate_directory
 from augmentation.constants import AUGMENTATIONS
-from augmentation.io import save_augmented_image
+from augmentation.io import save_augmented_image, augmented_paths
 
 
 def scan_dataset(root):
     """
     Validate directory structure, lists original images and
     records augmentations already applied to each original image
+    Original images are identified using absolute paths
 
     Args:
         root (Path): Root directory of the dataset
 
     Returns:
-        dict: Mapping of class names to dictionaries: 
-            {original image paths: sets of augmentation names}
+        dict: Nested dictionary: e.g.,
+            {
+                "Apple_rust": {
+                    Path("/data/Apple/Apple_rust/image1.JPG"): {
+                        "Flip",
+                        "Rotate",
+                    },
+                    Path("/data/Apple/Apple_rust/image2.JPG"): set(),
+                },
+                "Apple_scab": {
+                    Path("/data/Apple/Apple_scab/image3.JPG"): {
+                        "Crop",
+                    },
+            },
+        }
     """
     root = Path(root).resolve()
     validate_directory(root)
@@ -53,7 +67,12 @@ def calculate_target(dataset):
 
     Returns:
         dict: Mapping of class names to the number of additional images
-            required for balancing.
+            required for balancing
+            {
+                "Apple_rust": 200,
+                "Apple_healthy": 0,
+            }
+
     """
     totals = {}
     for class_name, images in dataset.items():
@@ -68,27 +87,49 @@ def calculate_target(dataset):
     return target
 
 
-def execute_augmentation_plan(dataset, plan):
+def create_augmentation_plan(dataset, targets, seed=42):
     """
-    Generate augmented images required to balance each class
+    Select augmentation-images needed to meet balancing targets
+    This function does not create image files.
     - Original images are processed in shuffled rounds so each image is
         considered before any image is selected again
     - For each image, one previously unused augmentation is selected at random
 
     Args:
-        dataset (dict): Mapping of class names to dictionaries whose keys
-            are original image paths and whose values are sets of already
-            applied augmentation names
-        plan (dict): Mapping of class names to the number of additional
-            images to generate
+        dataset (dict): Dataset information produced by scan_dataset()
+        targets (dict): Number of new augmentations required
+            for each class produced by calculate_target()
+        seed (int): Seed controlling random shuffle
+
+    Returns:
+        dict: Class names mapped to planned augmentations e.g.,
+        {
+            "Apple_rust": [
+                (
+                    Path("/data/Apple/Apple_rust/image1.JPG"),
+                    "Rotate",
+                ),
+                (
+                    Path("/data/Apple/Apple_rust/image2.JPG"),
+                    "ElasticDistortion",
+                ),
+            ],
+        }
 
     Raises:
         ValueError: If a class cannot produce enough unique augmentations
-            to reach its target
+            to meet its target.
     """
-    for class_name, target in plan.items():
+    rng = random.Random(seed)
+    plan = {}
+
+    for class_name in sorted(targets):
+        plan[class_name] = []
+        target = targets[class_name]
         images = dataset[class_name]
-        generated = 0
+        used_augmentations = {
+            image_path: set(used) for image_path, used in images.items()
+        }
 
         remaining_capacity = sum(
             len(AUGMENTATIONS) - len(used) for used in images.values()
@@ -98,32 +139,81 @@ def execute_augmentation_plan(dataset, plan):
                 f"{class_name} requires {target} additional images, "
                 f"but only {remaining_capacity} unique augmentations remain"
             )
-
-        while generated < target:
-            image_paths = list(images)
-            random.shuffle(image_paths)
+        planned = 0
+        while planned < target:
+            image_paths = sorted(used_augmentations)
+            rng.shuffle(image_paths)
 
             for image_path in image_paths:
-                if generated >= target:
+                if planned >= target:
                     break
-                used = images[image_path]
-                available = [
-                    augmentation
-                    for augmentation in AUGMENTATIONS
-                    if augmentation[0] not in used
+
+                used = used_augmentations[image_path]
+
+                available_names = [
+                    augmentation_name
+                    for augmentation_name, _ in AUGMENTATIONS
+                    if augmentation_name not in used
                 ]
-                if not available:
+
+                if not available_names:
                     continue
-                augmentation_name, augmentation_function = random.choice(
-                    available
+
+                augmentation_name = rng.choice(
+                    available_names
                 )
-                with Image.open(image_path) as image:
-                    augmented = augmentation_function(image)
-                    save_augmented_image(
-                        augmented,
-                        image_path,
-                        augmentation_name
-                    )
+                plan[class_name].append(
+                    (image_path, augmentation_name)
+                )
                 used.add(augmentation_name)
+                planned += 1
+    return plan
+
+
+def execute_augmentation_plan(
+    plan,
+    data_root=Path("data"),
+    augmented_root=Path("augmented_directory"),
+):
+    """
+    Generate augmented images specified by plan
+    Existing augmented images are skipped
+
+    Args:
+        plan (dict): Class names mapped to planned augmentations as
+            produced by create_augmentation_plan()
+    """
+    augmentation_functions = dict(AUGMENTATIONS)
+
+    for class_name in sorted(plan):
+        generated = 0
+        skipped = 0
+
+        for original_image, augmentation_name in plan[class_name]:
+            original_output, augmented_output = augmented_paths(
+                original_image,
+                augmentation_name,
+                data_root=data_root,
+                augmented_root=augmented_root,
+            )
+
+            if original_output.exists() and augmented_output.exists():
+                skipped += 1
+                continue
+
+            augmentation_function = augmentation_functions[augmentation_name]
+
+            with Image.open(original_image) as image:
+                augmented = augmentation_function(image)
+                save_augmented_image(
+                    augmented,
+                    original_image,
+                    augmentation_name,
+                    data_root=data_root,
+                    augmented_root=augmented_root,
+                )
                 generated += 1
-        print(f'Augmented {target} images for {class_name}')
+        print(
+            f"{class_name}: generated {generated}, "
+            f"skipped {skipped}"
+        )

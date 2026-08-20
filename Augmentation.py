@@ -8,6 +8,7 @@ from augmentation.constants import AUGMENTATIONS
 from augmentation.dataset import (
     scan_dataset,
     calculate_target,
+    create_augmentation_plan,
     execute_augmentation_plan
 )
 from augmentation.io import save_augmented_image, is_augmented_image
@@ -21,7 +22,7 @@ def parse_args():
         argparse.Namespace: parsed command-line arguments
     """
     parser = argparse.ArgumentParser(description='Augmentation')
-    parser.add_argument('image_path', help='image path')
+    parser.add_argument('path', help='image or directory path')
     args = parser.parse_args()
     return args
 
@@ -57,8 +58,13 @@ def augment_directory(root):
         root (Path): Root directory of the dataset
     """
     dataset = scan_dataset(root)
-    plan = calculate_target(dataset) 
-    execute_augmentation_plan(dataset, plan)
+    targets = calculate_target(dataset)
+    plan = create_augmentation_plan(dataset, targets, seed=42)
+    execute_augmentation_plan(
+        plan,
+        data_root=root.parent,
+        augmented_root=Path('augmented_directory')
+    )
     distribution = analyse_directory(root)
     plot_charts(distribution)
 
@@ -67,7 +73,7 @@ def main():
     try:
         args = parse_args()
 
-        path = Path(args.image_path)
+        path = Path(args.path)
         if path.is_file():
             augment_image(path)
         elif path.is_dir():

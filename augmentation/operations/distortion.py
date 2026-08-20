@@ -58,7 +58,7 @@ def elastic_distortion(
     return distorted
 
 
-def grid_distortion(img, grid_size, strength):
+def grid_distortion(img, grid_size, strength, seed=None):
     """
      Implement grid distortion
         - Applied grid-based image distortion by dividing the image into an
@@ -69,12 +69,15 @@ def grid_distortion(img, grid_size, strength):
             image (Image.Image): Pillow image
             grid_size : how many cells you want along each dimension.
             strength: is the range of how much you want to move the grid
+            seed (int | None): Random seed for reproducible distortions
+
     
         Returns:
             Image.Image: Distorted image.
     """
 
     img_arr = np.array(img)
+    rng = random.Random(seed)
 
     height, width = img_arr.shape[:2]
 
@@ -100,8 +103,8 @@ def grid_distortion(img, grid_size, strength):
                 new_y = y
 
             else:
-                dx = random.uniform(-strength, strength)
-                dy = random.uniform(-strength, strength)
+                dx = rng.uniform(-strength, strength)
+                dy = rng.uniform(-strength, strength)
 
                 new_x = x + dx
                 new_y = y + dy

@@ -30,7 +30,7 @@ def split_originals(dataset, validation_ratio=0.2, seed=42):
     validation = {}
 
     for class_name in sorted(dataset):
-        originals = sorted(dataset[class_name].keys())
+        originals = sorted(dataset[class_name])
 
         if len(originals) < 2:
             raise ValueError(
@@ -63,7 +63,7 @@ def save_split(train, validation, dataset_root, manifest_path):
         FileExistsError: if manifest already exists
         ValueError: if image path is outside dataset root
     """
-    dataset_root = Path(dataset_root)
+    dataset_root = Path(dataset_root).resolve()
     manifest_path = Path(manifest_path)
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -75,9 +75,7 @@ def save_split(train, validation, dataset_root, manifest_path):
     for split_name, split_data in splits:
         for class_name in sorted(split_data):
             for image_path in sorted(split_data[class_name]):
-                relative_path = Path(image_path).resolve().relative_to(
-                    dataset_root.resolve()
-                )
+                relative_path = image_path.relative_to(dataset_root)
                 rows.append({
                     'path': relative_path.as_posix(),
                     'class_name': class_name,
@@ -142,7 +140,7 @@ def load_split(manifest_path, dataset_root):
             if not relative_path:
                 raise ValueError('Manifest contains an empty path')
 
-            image_path = (dataset_root / Path(relative_path)).resolve()
+            image_path = dataset_root / relative_path
             splits[split_name].setdefault(class_name, []).append(image_path)
         return train, validation
 
@@ -186,3 +184,26 @@ def ensure_split(
     )
     save_split(train, validation, dataset_root, manifest_path)
     return train, validation
+
+
+def select_originals(dataset, selected):
+    """
+    Select original-image families from a scanned dataset based on split
+
+    Args:
+        dataset (dict): Dataset produced by scan_dataset()
+        selected (dict): Class names mapped to selected original paths
+
+    Returns:
+        dict: A dataset containing only the selected originals and their
+            existing augmentation histories
+    """
+    results = {}
+    for class_name, images in selected.items():
+        results[class_name] = {}
+        for image in images:
+            results[class_name][image] = set(dataset[class_name][image])
+
+    return results
+
+

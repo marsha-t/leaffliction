@@ -10,6 +10,7 @@ from .operations import (
 from .dataset import (
     scan_dataset,
     calculate_target,
+    create_augmentation_plan,
     execute_augmentation_plan
 )
 from .io import (
