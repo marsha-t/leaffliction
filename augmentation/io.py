@@ -3,14 +3,14 @@ from pathlib import Path
 from augmentation.constants import AUGMENTATIONS
 
 
-def augmented_paths(
+def build_augmentation_output_paths(
     original_path,
     augmentation_name,
     data_root=Path('data'),
     augmented_root=Path('augmented_directory')
 ) -> tuple[Path, Path]:
     """
-    Return the paths where an augmented image should be stored
+    Build the two output paths for an augmented image
 
     Args:
         original_path (str or Path): Path to the original image
@@ -60,7 +60,7 @@ def save_augmented_image(
     Raises:
         ValueError if input file does not come from /data
     """
-    original_output, augmented_output = augmented_paths(
+    original_output, augmented_output = build_augmentation_output_paths(
         path,
         name,
         data_root,
@@ -91,10 +91,7 @@ def is_augmented_image(path):
         bool: True if the image appears to be an augmented image,
             False otherwise
     """
-    stem = path.stem
-    return any(
-        stem.endswith(f"_{name[0]}") for name in AUGMENTATIONS
-    )
+    return parse_augmented_path(path) is not None
 
 
 def remove_empty_parents(path: Path, stop: Path):
@@ -114,3 +111,31 @@ def remove_empty_parents(path: Path, stop: Path):
             break  # Directory isn't empty
 
         directory = directory.parent
+
+
+def parse_augmented_path(path):
+    """
+    Extract source path and augmentation name from augmented path
+
+    Args:
+        path (str or Path): Original or augmented image path
+
+    Returns:
+        tuple[Path, str] | None: Source path and augmentation name,
+            or None when the path is not augmented
+    """
+    path = Path(path)
+
+    augmentation_names = [name for name, _ in AUGMENTATIONS]
+
+    for augmentation_name in augmentation_names:
+        marker = f"_{augmentation_name}"
+
+        if path.stem.endswith(marker):
+            original_stem = path.stem[:-len(marker)]
+
+            source_path = path.with_name(f"{original_stem}{path.suffix}")
+
+            return source_path, augmentation_name
+
+    return None

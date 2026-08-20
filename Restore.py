@@ -3,7 +3,10 @@ import argparse
 from pathlib import Path
 
 from augmentation.dataset import scan_dataset
-from augmentation.io import augmented_paths, remove_empty_parents
+from augmentation.io import (
+    build_augmentation_output_paths,
+    remove_empty_parents
+)
 
 
 def parse_args():
@@ -13,7 +16,9 @@ def parse_args():
     Returns:
         argparse.Namespace: parsed command-line arguments
     """
-    parser = argparse.ArgumentParser(description='Augmentation')
+    parser = argparse.ArgumentParser(
+        description="Remove dataset augmentations and its classification manifest"
+    )
     parser.add_argument('directory_path', help='directory path')
     args = parser.parse_args()
     return args
@@ -23,9 +28,15 @@ def main():
     try:
         args = parse_args()
 
-        path = Path(args.directory_path)
-        dataset = scan_dataset(path)
-        augmented_root = Path('augmented_directory').resolve()
+        dataset_root = Path(
+            args.directory_path
+        ).resolve()
+
+        dataset = scan_dataset(dataset_root)
+        data_root = dataset_root.parent
+        augmented_root = Path(
+            "augmented_directory"
+        ).resolve()
 
         for class_name in dataset:
             removed = 0
@@ -34,11 +45,11 @@ def main():
                 if not augmentations:
                     continue
                 for augmentation_name in augmentations:
-                    original_output, augmented_output = augmented_paths(
+                    original_output, augmented_output = build_augmentation_output_paths(
                         image,
                         augmentation_name,
-                        data_root=Path('data'),
-                        augmented_root=augmented_root,
+                        data_root,
+                        augmented_root,
                     )
                     if original_output.exists():
                         original_output.unlink()
@@ -51,6 +62,14 @@ def main():
                             augmented_root
                         )
             print(f"Removed {removed} augmentations for {class_name}")
+
+        manifests_root = Path('manifests').resolve()
+        manifest_path = (manifests_root / dataset_root.name / 'dataset.csv')
+        if manifest_path.exists():
+            manifest_path.unlink()
+            remove_empty_parents(manifest_path, manifests_root)
+            print(f"Removed manifest: {manifest_path}")
+
     except Exception as e:
         print("there is an issue :", e)
 

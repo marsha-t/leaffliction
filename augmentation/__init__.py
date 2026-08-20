@@ -14,7 +14,7 @@ from .dataset import (
     execute_augmentation_plan
 )
 from .io import (
-    augmented_paths,
+    build_augmentation_output_paths,
     save_augmented_image,
     is_augmented_image,
     remove_empty_parents

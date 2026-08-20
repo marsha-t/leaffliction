@@ -4,7 +4,11 @@ from pathlib import Path
 
 from analysis import validate_directory
 from augmentation.constants import AUGMENTATIONS
-from augmentation.io import save_augmented_image, augmented_paths
+from augmentation.io import (
+    parse_augmented_path,
+    save_augmented_image,
+    build_augmentation_output_paths
+)
 
 
 def scan_dataset(root):
@@ -36,7 +40,6 @@ def scan_dataset(root):
     root = Path(root).resolve()
     validate_directory(root)
     dataset = {}
-    augmentation_names = {name for name, _ in AUGMENTATIONS}
 
     for sub_dir in root.iterdir():
         if not sub_dir.is_dir():
@@ -46,10 +49,11 @@ def scan_dataset(root):
         for file in sub_dir.iterdir():
             if not file.is_file():
                 continue
-            parts = file.stem.rsplit('_', maxsplit=1)
-            if len(parts) == 2 and parts[1] in augmentation_names:
-                original_stem, augmentation_name = parts
-                original_path = file.parent / f"{original_stem}{file.suffix}"
+
+            parsed = parse_augmented_path(file)
+
+            if parsed is not None:
+                original_path, augmentation_name = parsed
                 images.setdefault(original_path, set()).add(augmentation_name)
             else:
                 images.setdefault(file, set())
@@ -190,7 +194,7 @@ def execute_augmentation_plan(
         skipped = 0
 
         for original_image, augmentation_name in plan[class_name]:
-            original_output, augmented_output = augmented_paths(
+            original_output, augmented_output = build_augmentation_output_paths(
                 original_image,
                 augmentation_name,
                 data_root=data_root,

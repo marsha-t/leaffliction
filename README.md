@@ -41,14 +41,24 @@ Apply augmentations on an image
 ./Augmentation.py 'data/Apple/Apple_Black_rot/image (1).JPG'
 ```
 
-Create a balanced dataset with augmentations
+Create a balanced dataset with augmentations (without train/validation split)
 
 ```bash
-python ./Augmentation.py 'data/Apple/'
+python ./Augmentation.py data/Apple/
 ```
 
 Apply transformations on an image
 
 ```bash
 ./Transformation.py 'data/Apple/Apple_Black_rot/image (1).JPG'
+```
+
+Restore dataset: Remove augmentations and manifest file
+```bash
+python ./Restore.py data/Apple
+```
+
+[WIP] Prepare fixed training and validation dataset
+```bash
+python train.py data/Apple
 ```
