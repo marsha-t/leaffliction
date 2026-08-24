@@ -16,6 +16,8 @@ from classification.splits import (
     create_plan_from_manifest
 )
 
+from classification.dataset import LeafDataset
+
 
 def parse_arguments():
     """
@@ -58,11 +60,11 @@ def prepare_data(dataset_root):
             validation_ratio=0.2,
             seed=42
         )
-        preview_nested_dict(train_split, 'Train')
-        preview_nested_dict(validation_split, 'Validation')
+        # preview_nested_dict(train_split, 'Train')
+        # preview_nested_dict(validation_split, 'Validation')
 
         train_base = select_originals(dataset, train_split)
-        preview_nested_dict(train_base, 'Train + Existing Augmented')
+        # preview_nested_dict(train_base, 'Train + Existing Augmented')
 
         balance_target = calculate_target(train_base)
         print(balance_target)
@@ -72,7 +74,7 @@ def prepare_data(dataset_root):
             balance_target,
             seed=42,
         )
-        preview_nested_dict(augmentation_plan, 'Augmentation Plan')
+        # preview_nested_dict(augmentation_plan, 'Augmentation Plan')
 
         save_dataset_manifest(
             train_base,
@@ -91,11 +93,53 @@ def prepare_data(dataset_root):
     return load_dataset_manifest(manifest_path, dataset_root)
 
 
+def create_class_mapping(train, validation):
+    """
+    Create one numeric class mapping shared by both dataset splits
+
+    Args:
+        train (dict): Class names mapped to training image paths
+        validation (dict): Class names mapped to validation image paths
+
+    Returns:
+        dict: Class names mapped to deterministic numeric labels
+
+    Raises:
+        ValueError: If training and validation contain different classes
+    """
+    train_classes = set(train)
+    validation_classes = set(validation)
+
+    if train_classes != validation_classes:
+        raise ValueError(
+            "Training and validation class names do not match"
+        )
+
+    return {
+        class_name: index
+        for index, class_name in enumerate(
+            sorted(train_classes)
+        )
+    }
+
+
 def main():
     args = parse_arguments()
     dataset_root = Path(args.dataset).resolve()
 
-    prepared = prepare_data(dataset_root)
+    train, validation = prepare_data(dataset_root)
+
+    class_to_index = create_class_mapping(train, validation)
+
+    train_dataset = LeafDataset(train, class_to_index)
+    validation_dataset = LeafDataset(validation, class_to_index)
+
+    train_image, train_label = train_dataset[0]
+    print(train_image.mode)
+    print(train_label)
+    validation_image, validation_label = validation_dataset[0]
+    print(validation_image.mode)
+    print(validation_label)
 
 
 if __name__ == "__main__":
