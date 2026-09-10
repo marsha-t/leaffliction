@@ -18,12 +18,24 @@ from classification.splits import (
 )
 from classification.dataset import LeafDataset
 
+
+def preview_nested_dict(dataset, header="", rows=1):
+    if header:
+        print(f"---{header}---")
+    for class_name, images in dataset.items():
+        if isinstance(images, dict):
+            print(class_name, dict(list(images.items())[:rows]))
+        elif isinstance(images, list):
+            print(class_name, images[:rows])
+    print()
+
+
 def prepare_data(dataset_root):
     """
     """
     manifest_path = (Path('manifests') / dataset_root.name / 'dataset.csv')
     if manifest_path.exists():
-        train, validation = load_dataset_manifest(manifest_path, dataset_root)
+        train, _ = load_dataset_manifest(manifest_path, dataset_root)
         augmentation_plan = create_plan_from_manifest(train)
     else:
         dataset = scan_dataset(dataset_root)
