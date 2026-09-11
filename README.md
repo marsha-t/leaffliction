@@ -54,11 +54,21 @@ Apply transformations on an image
 ```
 
 Restore dataset: Remove augmentations and manifest file
+
 ```bash
 python ./Restore.py data/Apple
 ```
 
-[WIP] Prepare fixed training and validation dataset
+Train model
+
 ```bash
 python train.py data/Apple
+```
+
+Predict image
+
+```bash
+python predict.py predict_apple_black_rot.JPG --checkpoint checkpoints/custom_cnn/best.pt
+python predict.py predict_apple_rust.JPG --checkpoint checkpoints/custom_cnn/best.pt
+python predict.py predict_apple_scab.JPG --checkpoint checkpoints/custom_cnn/best.pt
 ```

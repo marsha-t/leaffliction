@@ -33,7 +33,7 @@ def parse_arguments():
             help='Training batch size'
     )
     parser.add_argument(
-        '--epoch',
+        '--epochs',
         type=int,
         default=20,
         help='Number of training epochs'
@@ -60,6 +60,7 @@ def main():
 
     class_to_index = create_class_mapping(train, validation)
 
+    # TODO calculation of mean/std not needed for pretrained models
     mean, std = compute_training_stats(train, class_to_index)
     print(f'Mean: {mean}')
     print(f'Std: {std}')
@@ -117,14 +118,24 @@ def main():
     checkpoint_dir = Path('checkpoints') / args.model
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
+    checkpoint_metadata = {
+        'model_type': args.model,
+        'class_to_index': class_to_index,
+        'preprocessing': {
+            'mean': mean.tolist(),
+            'std': std.tolist(),
+        }
+    }
+
     history = train_model(
         model,
         train_loader,
         validation_loader,
         device,
         args.learning_rate,
-        args.epoch,
+        args.epochs,
         checkpoint_dir,
+        checkpoint_metadata
     )
 
 

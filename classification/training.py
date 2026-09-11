@@ -10,7 +10,8 @@ def train_model(
     device,
     learning_rate,
     epochs,
-    checkpoint_dir
+    checkpoint_dir,
+    checkpoint_metadata
 ):
     """
     Train and validate a model for a specified number of epochs.
@@ -25,6 +26,10 @@ def train_model(
         device (torch.device): Device on which to run the model
         learning_rate (float): Learning rate used by the optimizer
         epochs (int): Number of training epochs
+        checkpoint_dir (str | Path): Directory path where checkpoints are saved
+        checkpoint_metadata (dict): Metadata required to reconstruct the model
+            for inference
+
 
     Returns:
         dict: Training history: training and validation loss and accuracy
@@ -68,22 +73,24 @@ def train_model(
         history["validation_accuracy"].append(validation_accuracy)
 
         save_checkpoint(
+            checkpoint_dir / 'last.pt',
             model,
             epoch,
             optimizer,
             validation_loss,
             validation_accuracy,
-            checkpoint_dir / 'last.pt'
+            checkpoint_metadata
         )
         if validation_loss < best_validation_loss:
             best_validation_loss = validation_loss
             save_checkpoint(
+                checkpoint_dir / 'best.pt',
                 model,
                 epoch,
                 optimizer,
                 validation_loss,
                 validation_accuracy,
-                checkpoint_dir / 'best.pt'
+                checkpoint_metadata
             )
 
     return history
@@ -167,18 +174,20 @@ def validate_epoch(model, data_loader, device, criterion):
 
 
 def save_checkpoint(
-    model, epoch, optimizer, validation_loss, validation_accuracy, path
+    path, model, epoch, optimizer, validation_loss, validation_accuracy, checkpoint_metadata
 ):
     """
     Save model training state to a checkpoint file
 
     Args:
+        path (str | Path): Path where checkpoint is saved
         model (torch.nn.Module): Model whose state is saved
         epoch (int): Epoch at which checkpoint is saved
         optimizer (torch.optim.Optimizer): Optimizer whose state is saved
         validation_loss (float): Validation loss for current epoch
         validation_accuracy (float): Validation accuracy for current epoch
-        path (str | Path): Path where checkpoint is saved
+        checkpoint_metadata (dict): Metadata required to reconstruct the model
+            for inference
     """
     checkpoint = {
         "epoch": epoch,
@@ -186,5 +195,6 @@ def save_checkpoint(
         "optimizer_state_dict": optimizer.state_dict(),
         "validation_loss": validation_loss,
         "validation_accuracy": validation_accuracy,
+        **checkpoint_metadata
     }
     torch.save(checkpoint, path)

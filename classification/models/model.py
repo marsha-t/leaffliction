@@ -4,7 +4,7 @@ from .custom_cnn import CustomCNN
 def create_model(model_type, num_classes):
     """
     Create and return model based on specified model_type
-    
+
     Args:
         model_type (str): Type of model to create
         num_classes (int): Number of output classes
