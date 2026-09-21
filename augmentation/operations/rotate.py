@@ -1,6 +1,3 @@
-from PIL import Image
-
-
 def rotate(img, angle=90):
     """
     rotate an image around certain angle around its center

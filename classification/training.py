@@ -158,7 +158,9 @@ def validate_epoch(model, data_loader, device, criterion):
     total_correct = 0
     total_samples = 0
     with torch.no_grad():
-        for images, labels in tqdm(data_loader, desc='Validation', leave=False):
+        for images, labels in tqdm(
+            data_loader, desc='Validation', leave=False
+        ):
             images = images.to(device)
             labels = labels.to(device)
             logits = model(images)
@@ -174,7 +176,13 @@ def validate_epoch(model, data_loader, device, criterion):
 
 
 def save_checkpoint(
-    path, model, epoch, optimizer, validation_loss, validation_accuracy, checkpoint_metadata
+    path,
+    model,
+    epoch,
+    optimizer,
+    validation_loss,
+    validation_accuracy,
+    checkpoint_metadata
 ):
     """
     Save model training state to a checkpoint file

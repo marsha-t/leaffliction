@@ -8,7 +8,6 @@ analysis/         Dataset analysis and visualisation
 augmentation/     Data augmentation operations
 transformation/   Classical image processing and feature extraction
 classification/   Model training and prediction
-common/           Shared utilities (image I/O, paths, configuration)
 ```
 
 The top-level scripts (e.g., `Distribution.py`) are the command-line entry points required by the subject. 

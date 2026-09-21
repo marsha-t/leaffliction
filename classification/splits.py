@@ -2,7 +2,9 @@ import random
 import csv
 from pathlib import Path
 
-from augmentation.io import build_augmentation_output_paths, parse_augmented_path
+from augmentation.io import (
+    build_augmentation_output_paths, parse_augmented_path
+)
 
 
 def split_originals(dataset, validation_ratio=0.2, seed=42):
@@ -17,8 +19,8 @@ def split_originals(dataset, validation_ratio=0.2, seed=42):
         seed (int): Seed used for reproducible shuffling
 
     Returns:
-        tuple[`dict`, `dict`]: Training and validation mappings from class names
-            to lists of original image paths e.g.,
+        tuple[`dict`, `dict`]: Training and validation mappings from class
+            names to lists of original image paths e.g.,
             {
                 "Apple_rust": [
                     Path("/data/Apple/Apple_rust/image20.JPG"),

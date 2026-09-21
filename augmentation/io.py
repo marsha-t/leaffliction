@@ -25,7 +25,7 @@ def build_augmentation_output_paths(
     original_path = Path(original_path).resolve()
     data_root = Path(data_root).resolve()
     augmented_root = Path(augmented_root).resolve()
-    
+
     filename = (
         f"{original_path.stem}_"
         f"{augmentation_name}"
@@ -66,7 +66,7 @@ def save_augmented_image(
         data_root,
         augmented_root,
     )
-    
+
     # Save in /data
     image.save(original_output)
 

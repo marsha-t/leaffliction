@@ -17,7 +17,7 @@ def elastic_distortion(
     Args:
         image (Image.Image): Pillow image
         alpha (float): Scale factor controlling distortion strength
-        sigma (float): Standard deviation of Gaussian smoothing 
+        sigma (float): Standard deviation of Gaussian smoothing
             applied to displacement field
         seed (int | None): Random seed for reproducible distortions.
             If None, a different distortion is generated each time
@@ -64,14 +64,13 @@ def grid_distortion(img, grid_size, strength, seed=None):
         - Applied grid-based image distortion by dividing the image into an
           N×N grid and randomly displacing grid points to create smooth
           geometric deformations.
-    
+
         Args:
             image (Image.Image): Pillow image
             grid_size : how many cells you want along each dimension.
             strength: is the range of how much you want to move the grid
             seed (int | None): Random seed for reproducible distortions
 
-    
         Returns:
             Image.Image: Distorted image.
     """
@@ -94,10 +93,12 @@ def grid_distortion(img, grid_size, strength, seed=None):
         for x_index, x in enumerate(x_points):
 
             # keep borders fixed
-            if (x_index == 0 or 
-                x_index == len(x_points)-1 or
+            if (
+                x_index == 0 or
+                x_index == len(x_points) - 1 or
                 y_index == 0 or
-                y_index == len(y_points)-1):
+                y_index == len(y_points) - 1
+            ):
 
                 new_x = x
                 new_y = y

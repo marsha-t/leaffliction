@@ -194,11 +194,13 @@ def execute_augmentation_plan(
         skipped = 0
 
         for original_image, augmentation_name in plan[class_name]:
-            original_output, augmented_output = build_augmentation_output_paths(
-                original_image,
-                augmentation_name,
-                data_root=data_root,
-                augmented_root=augmented_root,
+            original_output, augmented_output = (
+                build_augmentation_output_paths(
+                    original_image,
+                    augmentation_name,
+                    data_root=data_root,
+                    augmented_root=augmented_root,
+                )
             )
 
             if original_output.exists() and augmented_output.exists():

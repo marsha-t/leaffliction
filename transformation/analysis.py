@@ -1,4 +1,3 @@
-# def analyse_leaf():
 import cv2
 import numpy as np
 
@@ -6,12 +5,12 @@ import numpy as np
 def measure_leaf(contour):
     """
      Calculate some of the image measurements such as
-     area perimeter and centroid of the object 
+     area perimeter and centroid of the object
      Args:
         contour (np.ndarray): Contour outlining the leaf
-    
+
      Returns :
-      measurement : dictionary that contains different measurement of the leaf  
+      measurement : dictionary that contains different measurement of the leaf
 
     """
     measurement = {}
@@ -79,12 +78,13 @@ def compute_landmarks(contour, n_landmarks):
 
 def colour_histogram(img):
     """
-        Compute the image colors frequencies
-        Args:
+    Compute the image colors frequencies
+
+    Args:
         image (np.ndarray): original image (in BGR)
-    
-        Returns :
-        histogram data: dict that contain the frequencies and the colors we want to plot
+
+    Returns :
+        histogram data: dict that contain frequencies and plotting colors
     """
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     pixels = hsv.reshape(-1, 3)
@@ -113,7 +113,7 @@ def colour_histogram(img):
         "blue",
         "purple",
         "pink"
-    ]  
+    ]
     histogram_data = {}
     histogram_data["frequencies"] = frequencies
     histogram_data["bar_colors"] = bar_colors

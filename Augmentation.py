@@ -70,6 +70,7 @@ def augment_directory(root):
 
 
 def main():
+    """Apply augmentations to an image or balance a dataset from CLI arguments"""
     try:
         args = parse_args()
 
@@ -80,7 +81,7 @@ def main():
             augment_directory(path)
 
     except Exception as e:
-        print("there is an issue :", e)
+        print("Exception:", e)
 
 
 if __name__ == "__main__":

@@ -9,9 +9,13 @@ from classification.transforms import create_transform
 
 def parse_arguments():
     """
+    Parse image path and required checkpoint path from command line
+
+    Returns:
+        argparse.Namespace: Parsed prediction arguments
     """
     parser = argparse.ArgumentParser(
-        description='Train leaf-disease classifier'
+        description='Predict the leaf-disease class of an image'
     )
     parser.add_argument(
         'image',
@@ -27,6 +31,17 @@ def parse_arguments():
 
 def load_checkpoint(checkpoint_path, device):
     """
+    Reconstruct the model from checkpoint metadata, load its weights,
+        move it to the requested device, and enable evaluation mode
+    Also load preprocessing configuration
+
+    Args:
+        checkpoint_path (str or Path): Path to a training checkpoint
+        device (torch.device): Device on which to load and run the model
+
+    Returns:
+        tuple: Restored model, preprocessing transform, and a dictionary
+            mapping integer class indices to class names
     """
     checkpoint = torch.load(checkpoint_path, map_location=device)
 
@@ -52,6 +67,7 @@ def load_checkpoint(checkpoint_path, device):
 
 
 def main():
+    """Load a checkpoint and print the predicted class of image"""
     args = parse_arguments()
     image_path = Path(args.image).resolve()
     device = torch.device(

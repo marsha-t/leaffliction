@@ -7,7 +7,8 @@ def create_transform(model_type, mean, std):
 
     Args:
         model_type (str): Type of model for which to create the transform.
-        mean (sequence of float): Per-channel mean values used for normalization
+        mean (sequence of float): Per-channel mean values used for
+            normalization
         std (sequence of float): Per-channel standard deviation values used for
             normalization.
 

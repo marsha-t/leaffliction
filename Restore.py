@@ -17,7 +17,7 @@ def parse_args():
         argparse.Namespace: parsed command-line arguments
     """
     parser = argparse.ArgumentParser(
-        description="Remove dataset augmentations and its classification manifest"
+        description="Remove dataset augmentations and classification manifest"
     )
     parser.add_argument('directory_path', help='directory path')
     args = parser.parse_args()
@@ -25,6 +25,7 @@ def parse_args():
 
 
 def main():
+    """Remove detected dataset augmentations & copies, and manifest"""
     try:
         args = parse_args()
 
@@ -45,11 +46,13 @@ def main():
                 if not augmentations:
                     continue
                 for augmentation_name in augmentations:
-                    original_output, augmented_output = build_augmentation_output_paths(
-                        image,
-                        augmentation_name,
-                        data_root,
-                        augmented_root,
+                    original_output, augmented_output = (
+                        build_augmentation_output_paths(
+                            image,
+                            augmentation_name,
+                            data_root,
+                            augmented_root,
+                        )
                     )
                     if original_output.exists():
                         original_output.unlink()
@@ -71,7 +74,7 @@ def main():
             print(f"Removed manifest: {manifest_path}")
 
     except Exception as e:
-        print("there is an issue :", e)
+        print("Exception:", e)
 
 
 if __name__ == "__main__":

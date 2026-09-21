@@ -1,4 +1,6 @@
-from augmentation.operations import flip, rotate, shear, skew, crop, elastic_distortion, grid_distortion
+from augmentation.operations import (
+    flip, rotate, shear, skew, crop, elastic_distortion, grid_distortion
+)
 
 AUGMENTATIONS = [
     ('Flip', lambda image: flip(image, 'v')),

@@ -19,6 +19,7 @@ class LeafDataset(Dataset):
         class_to_index,
         transform=None
     ):
+        """Build sorted list of image paths and labels"""
         self.class_to_index = dict(class_to_index)
         self.transform = transform
         self.samples = []
@@ -33,9 +34,20 @@ class LeafDataset(Dataset):
                 self.samples.append((Path(image_path), label))
 
     def __len__(self):
+        """Return the number of image samples"""
         return len(self.samples)
 
     def __getitem__(self, index):
+        """
+        Load an RGB image, apply optional transform, and return its label
+
+        Args:
+            index (int): Position of sample in the dataset
+
+        Returns:
+            tuple: Image or transformed image, followed by its integer class
+                label
+        """
         image_path, label = self.samples[index]
         with Image.open(image_path) as source:
             image = source.convert('RGB')

@@ -1,6 +1,7 @@
 import cv2
 # import numpy as np
 
+
 def create_leaf_mask(image):
     """
     Create binary mask of leaf
@@ -13,7 +14,9 @@ def create_leaf_mask(image):
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    _, mask = cv2.threshold(
+        gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+    )
 
     # TODO consider adding morphological operations to tidy up mask
     # kernel = np.ones((5, 5), np.uint8)
@@ -53,5 +56,5 @@ def extract_roi(contour):
         tuple[int, int, int, int]: bounding rectangle of ROI
             (x, y, width, height)
     """
-    
+
     return cv2.boundingRect(contour)

@@ -20,6 +20,14 @@ from classification.dataset import LeafDataset
 
 
 def preview_nested_dict(dataset, header="", rows=1):
+    """
+    Print short preview of each class in a dataset mapping
+
+    Args:
+        dataset (dict): Class names mapped to dictionaries or lists
+        header (str): Optional heading printed before the preview
+        rows (int): Maximum number of entries displayed per class
+    """
     if header:
         print(f"---{header}---")
     for class_name, images in dataset.items():
@@ -32,6 +40,20 @@ def preview_nested_dict(dataset, header="", rows=1):
 
 def prepare_data(dataset_root):
     """
+    Prepare training and validation samples.
+    Either reuse existing manifest or create a split with 20% validation data
+        per class and plan augmentations to balance the training set.
+    Generate missing augmentations before loading the final sample paths.
+    Augmented images are saved in both the source dataset and
+        /augmented_directory. 
+    Manifests are stored under manifests/<dataset name>.
+
+    Args:
+        dataset_root (Path): Dataset directory containing class subdirectories
+
+    Returns:
+        tuple[dict, dict]: Training and validation mappings from class names
+            to lists of image paths
     """
     manifest_path = (Path('manifests') / dataset_root.name / 'dataset.csv')
     if manifest_path.exists():

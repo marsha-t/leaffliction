@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-from PIL import Image
 import argparse
 import cv2
 
@@ -23,7 +22,9 @@ def parse_args():
     Returns:
         argparse.Namespace: parsed command-line arguments
     """
-    parser = argparse.ArgumentParser(description='Augmentation')
+    parser = argparse.ArgumentParser(
+        description='Analyse leaf shape and colour and display transformations'
+    )
     parser.add_argument('image_path', help='image path')
     args = parser.parse_args()
     return args
@@ -61,6 +62,7 @@ def transformation_pipeline(image):
 
 
 def main():
+    """Load specified image and display its analysis"""
     try:
         args = parse_args()
 
@@ -68,13 +70,10 @@ def main():
         if image is None:
             raise FileNotFoundError(f"Could not read image: {args.image_path}")
         pipeline = transformation_pipeline(image)
-        # print("image contents", pipeline.keys())
         display_pipeline(image, pipeline)
 
     except Exception as e:
-        print("there is an issue :", e)
-        # there is issues when we use this approach sometme i cant know the source of the issue 
-        # ex: there is an issue : max() iterable argument is empty
+        print("Exception:", e)
 
 
 if __name__ == "__main__":

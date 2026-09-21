@@ -5,7 +5,8 @@ IMAGE_EXTENSIONS = ('.jpg', '.png')
 
 def validate_directory(path: str) -> list[str]:
     """
-    Validate that filepath is to a directory containing sub directories of images
+    Validate that filepath is to a directory containing sub directories
+        of images
 
     Args:
     path (str): directory path
