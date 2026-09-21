@@ -26,6 +26,21 @@ The current implementation includes a custom CNN. Planned experiments include pr
 
 See [DESIGN.md](DESIGN.md) for implementation decisions and tradeoffs.
 
+## Project structure
+
+The root-level scripts provide the command-line entry points required by the
+project subject, while the implementation is organised into modules by stage:
+
+- `analysis/` — dataset distribution analysis and visualisation
+- `augmentation/` — image augmentation and dataset balancing
+- `transformation/` — leaf segmentation and feature visualisation
+- `classification/` — data loading, model definitions, training utilities, and preprocessing
+- `manifests/` — CSV files recording dataset splits
+- `demo_images/` — example images for running inference
+
+Generated datasets and model checkpoints are kept in
+`augmented_directory/` and `checkpoints/` respectively and are not tracked by Git.
+
 ## Setup
 
 This project uses **Python 3.10**. Create and activate a virtual environment:
