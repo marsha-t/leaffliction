@@ -49,6 +49,7 @@ def train_model(
         lr=learning_rate,
         weight_decay=1e-4
     )
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=2, min_lr=1e-6)
 
     for epoch in range(epochs):
         start = perf_counter()
@@ -58,6 +59,7 @@ def train_model(
         validation_loss, validation_accuracy = validate_epoch(
             model, validation_loader, device, criterion
         )
+        scheduler.step(validation_loss)
         elapsed = perf_counter() - start
 
         print(f"Epoch {epoch + 1}/{epochs}")

@@ -1,5 +1,5 @@
 from .custom_cnn import CustomCNN
-
+from .custom_vit import VisionTransformer
 
 def create_model(model_type, num_classes):
     """
@@ -18,6 +18,6 @@ def create_model(model_type, num_classes):
     if model_type == 'custom_cnn':
         return CustomCNN(num_classes)
     # if model_type == 'pretrained_cnn':
-    # if model_type == 'pretrained_vit':
-
+    if model_type == 'custom_vit':
+        return VisionTransformer(patch_size=16)
     raise ValueError(f'Unknown model type: {model_type}')
