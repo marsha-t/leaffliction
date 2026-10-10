@@ -5,7 +5,8 @@ IMAGE_EXTENSIONS = ('.jpg', '.png')
 
 def validate_directory(path: str) -> list[str]:
     """
-    Validate that filepath is to a directory containing sub directories of images
+    Validate that filepath is to a directory containing sub directories
+        of images
 
     Args:
     path (str): directory path
@@ -28,8 +29,10 @@ def validate_directory(path: str) -> list[str]:
 
     sub_dir_count = 0
     for sub_dir in dataset_dir.iterdir():
-        if sub_dir.is_dir():
-            image_count = 0
+        if not sub_dir.is_dir():
+            warnings.append(f"{sub_dir} is not a directory")
+            continue
+        image_count = 0
         for file in sub_dir.iterdir():
             if not file.is_file():
                 warnings.append(f"{file} is not a file")
@@ -40,8 +43,6 @@ def validate_directory(path: str) -> list[str]:
         if image_count == 0:
             raise ValueError(f'Sub directory {sub_dir} has no image files')
         sub_dir_count += 1
-    else:
-        warnings.append(f"{sub_dir} is not a directory")
     if sub_dir_count == 0:
         raise ValueError(f'{path}: No sub-directories with image files found')
     return warnings

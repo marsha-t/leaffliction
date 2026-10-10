@@ -101,8 +101,9 @@ def draw_landmarks(image, landmarks):
 
     Args:
         image (np.ndarray): original image
-        landmarks: computed pseudolandmarks describing leaf shape  # TODO landmarks type to be determined
-    
+        landmarks: computed pseudolandmarks describing leaf shape
+            # TODO landmarks type to be determined
+
     Returns:
         np.ndarray: Annotate image containing landmarks
     """
@@ -110,7 +111,7 @@ def draw_landmarks(image, landmarks):
 
     color_top = (255, 0, 0)
     color_bottom = (255, 0, 255)
-    color_center = (0, 165, 255) 
+    color_center = (0, 165, 255)
 
     radius = 4
 
@@ -187,10 +188,12 @@ def display_pipeline(original_image, pipeline):
     images['landmarks'] = draw_landmarks(
       original_image, pipeline['landmarks']
     )
-    images['color_histogram'] = plot_histogram(original_image, pipeline["histogram"])
-    # TODO this currently opens each image in a separate window. Fix to show everything in one window
+    images['color_histogram'] = plot_histogram(
+        original_image, pipeline["histogram"]
+    )
+    # TODO this currently opens each image in a separate window.
+    #   Fix to show all in one window
     for name, image in images.items():
         cv2.imshow(name, image)
         cv2.waitKey(0)  # wait indefinitely until key press
         cv2.destroyAllWindows()  # close all windows
-
