@@ -23,7 +23,8 @@ def create_transform(model_type, mean, std):
     # elif model_type == 'pretrained_cnn'
     elif model_type == 'custom_vit':
         return create_custom_cnn_transform(mean, std)
-    # elif model_type == 'pretrained_vit'
+    elif model_type == 'pretrained_vit':
+        return create_custom_cnn_transform(mean, std)
     raise ValueError(f'Unknown model type: {model_type}')
 
 

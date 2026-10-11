@@ -31,7 +31,7 @@ def parse_arguments():
     )
     parser.add_argument(
         '--model',
-        choices=['custom_cnn', 'custom_vit'],  # + 'pretrained_cnn', 'pretrained_vit'
+        choices=['custom_cnn', 'custom_vit', 'pretrained_vit'],  # + 'pretrained_cnn', 
         default='custom_cnn',
         help='Model architecture to train'
     )
