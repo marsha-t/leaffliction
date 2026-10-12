@@ -281,8 +281,10 @@ def create_plan_from_manifest(train):
                 continue
 
             source_path, augmentation_name = parsed
-            plan[class_name].append((source_path, augmentation_name))
-
+            if augmentation_name != "Crop":
+                plan[class_name].append((source_path, augmentation_name))
+            else:
+                print("im hereee")
     return plan
 
 

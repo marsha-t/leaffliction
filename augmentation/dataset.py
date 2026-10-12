@@ -3,7 +3,7 @@ from PIL import Image
 from pathlib import Path
 
 from analysis import validate_directory
-from augmentation.constants import AUGMENTATIONS
+from augmentation.constants import TRAIN_AUGMENTATIONS
 from augmentation.io import (
     parse_augmented_path,
     save_augmented_image,
@@ -136,7 +136,7 @@ def create_augmentation_plan(dataset, targets, seed=42):
         }
 
         remaining_capacity = sum(
-            len(AUGMENTATIONS) - len(used) for used in images.values()
+            len(TRAIN_AUGMENTATIONS) - len(used) for used in images.values()
         )
         if target > remaining_capacity:
             raise ValueError(
@@ -156,7 +156,7 @@ def create_augmentation_plan(dataset, targets, seed=42):
 
                 available_names = [
                     augmentation_name
-                    for augmentation_name, _ in AUGMENTATIONS
+                    for augmentation_name, _ in TRAIN_AUGMENTATIONS
                     if augmentation_name not in used
                 ]
 
@@ -187,7 +187,7 @@ def execute_augmentation_plan(
         plan (dict): Class names mapped to planned augmentations as
             produced by create_augmentation_plan()
     """
-    augmentation_functions = dict(AUGMENTATIONS)
+    augmentation_functions = dict(TRAIN_AUGMENTATIONS)
 
     for class_name in sorted(plan):
         generated = 0

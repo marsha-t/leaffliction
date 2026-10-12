@@ -11,3 +11,13 @@ AUGMENTATIONS = [
     ('ElasticDistortion', lambda image: elastic_distortion(image, seed=42)),
     ('GridDistortion', lambda image: grid_distortion(image, 4, 30, seed=42))
 ]
+
+
+TRAIN_AUGMENTATIONS = [
+    ('Flip', lambda image: flip(image, 'v')),
+    ('Rotate', lambda image: rotate(image, 90)),
+    ('Skew', skew),
+    ('Shear', lambda image: shear(image, 0.3, horizontal=True)),
+    ('ElasticDistortion', lambda image: elastic_distortion(image, seed=42)),
+    ('GridDistortion', lambda image: grid_distortion(image, 4, 30, seed=42))
+]
