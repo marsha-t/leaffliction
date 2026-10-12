@@ -14,7 +14,8 @@ from classification.splits import (
     save_dataset_manifest,
     split_originals,
     load_dataset_manifest,
-    create_plan_from_manifest
+    create_plan_from_manifest,
+    create_split_symlinks
 )
 from classification.dataset import LeafDataset
 
@@ -98,7 +99,13 @@ def prepare_data(dataset_root):
         augmented_root=Path('augmented_directory')
     )
 
-    return load_dataset_manifest(manifest_path, dataset_root)
+    train, validation = load_dataset_manifest(manifest_path, dataset_root)
+
+    create_split_symlinks(
+        train,
+        validation,
+        output_root=Path('dataset_views')/dataset_root.name)
+    return train, validation
 
 
 def create_class_mapping(train, validation):

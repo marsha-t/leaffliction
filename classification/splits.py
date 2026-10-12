@@ -284,3 +284,39 @@ def create_plan_from_manifest(train):
             plan[class_name].append((source_path, augmentation_name))
 
     return plan
+
+
+def create_split_symlinks(train, validation, output_root):
+    """
+    Create browsable training and validation directories using symbolic links
+    Checks for whether the file/link already exists (even broken links)
+
+    Args:
+        train (dict): Class names mapped to training image paths
+        validation (dict): Class names mapped to validation image paths
+        output_root (Path): Root directory for generated symbolic links
+    """
+    output_root = Path(output_root)
+
+    for split_name, samples in [('train', train), ('validation', validation)]:
+        for class_name, image_paths in samples.items():
+            split_dir = output_root / class_name / split_name
+            split_dir.mkdir(parents=True, exist_ok=True)
+
+            for image_path in image_paths:
+                source = Path(image_path).resolve()
+                if not source.is_file():
+                    return FileNotFoundError(
+                        f"Source image does not exist: {source}"
+                    )
+                destination = split_dir / source.name
+                if destination.is_symlink():
+                    if destination.resolve() == source:
+                        continue
+                    destination.unlink()
+                elif destination.exists():
+                    raise FileExistsError(
+                        f"Cannot create symlink: {destination} already "
+                        "exists and is not a symlink"
+                    )
+                destination.symlink_to(source)
