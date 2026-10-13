@@ -59,9 +59,10 @@ def augment_directory(root):
     """
     dataset = scan_dataset(root)
     targets = calculate_target(dataset)
-    plan = create_augmentation_plan(dataset, targets, seed=42)
+    plan = create_augmentation_plan(dataset, targets, AUGMENTATIONS, seed=42)
     execute_augmentation_plan(
         plan,
+        AUGMENTATIONS,
         data_root=root.parent,
         augmented_root=Path('augmented_directory')
     )

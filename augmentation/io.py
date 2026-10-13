@@ -94,25 +94,6 @@ def is_augmented_image(path):
     return parse_augmented_path(path) is not None
 
 
-def remove_empty_parents(path: Path, stop: Path):
-    """
-    Remove empty parent directories up to, but not including, stop
-
-    Args:
-        path (Path): Deleted file path
-        stop (Path): Highest directory that should never be removed
-    """
-    directory = path.parent
-
-    while directory != stop:
-        try:
-            directory.rmdir()
-        except OSError:
-            break  # Directory isn't empty
-
-        directory = directory.parent
-
-
 def parse_augmented_path(path):
     """
     Extract source path and augmentation name from augmented path

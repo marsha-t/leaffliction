@@ -11,3 +11,7 @@ AUGMENTATIONS = [
     ('ElasticDistortion', lambda image: elastic_distortion(image, seed=42)),
     ('GridDistortion', lambda image: grid_distortion(image, 4, 30, seed=42))
 ]
+
+TRAIN_AUGMENTATIONS = [
+    (name, fn) for name, fn in AUGMENTATIONS if name != 'Crop'
+]

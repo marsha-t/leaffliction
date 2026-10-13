@@ -3,7 +3,6 @@ from PIL import Image
 from pathlib import Path
 
 from analysis import validate_directory
-from augmentation.constants import AUGMENTATIONS
 from augmentation.io import (
     parse_augmented_path,
     save_augmented_image,
@@ -91,7 +90,7 @@ def calculate_target(dataset):
     return target
 
 
-def create_augmentation_plan(dataset, targets, seed=42):
+def create_augmentation_plan(dataset, targets, augmentations_list, seed=42):
     """
     Select augmentation-images needed to meet balancing targets
     This function does not create image files.
@@ -103,7 +102,9 @@ def create_augmentation_plan(dataset, targets, seed=42):
         dataset (dict): Dataset information produced by scan_dataset()
         targets (dict): Number of new augmentations required
             for each class produced by calculate_target()
-        seed (int): Seed controlling random shuffle
+        augmentations_list (list): Available augmentation operations in
+            (name, callable) tuples
+        seed (int): Seed controlling random shuffle and augmentation selection
 
     Returns:
         dict: Class names mapped to planned augmentations e.g.,
@@ -136,7 +137,7 @@ def create_augmentation_plan(dataset, targets, seed=42):
         }
 
         remaining_capacity = sum(
-            len(AUGMENTATIONS) - len(used) for used in images.values()
+            len(augmentations_list) - len(used) for used in images.values()
         )
         if target > remaining_capacity:
             raise ValueError(
@@ -156,7 +157,7 @@ def create_augmentation_plan(dataset, targets, seed=42):
 
                 available_names = [
                     augmentation_name
-                    for augmentation_name, _ in AUGMENTATIONS
+                    for augmentation_name, _ in augmentations_list
                     if augmentation_name not in used
                 ]
 
@@ -176,6 +177,7 @@ def create_augmentation_plan(dataset, targets, seed=42):
 
 def execute_augmentation_plan(
     plan,
+    augmentations_list,
     data_root=Path("data"),
     augmented_root=Path("augmented_directory"),
 ):
@@ -186,8 +188,13 @@ def execute_augmentation_plan(
     Args:
         plan (dict): Class names mapped to planned augmentations as
             produced by create_augmentation_plan()
+        augmentations_list (list): Available augmentation operations in
+            (name, callable) tuples
+        data_root (Path): Root directory containing the source dataset
+        augmented_root (Path): Root directory for additional copies of
+            augmented images
     """
-    augmentation_functions = dict(AUGMENTATIONS)
+    augmentation_functions = dict(augmentations_list)
 
     for class_name in sorted(plan):
         generated = 0
