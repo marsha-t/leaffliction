@@ -1,7 +1,8 @@
 from torchvision import transforms
+from torchvision.models import ResNet18_Weights
 
 
-def create_transform(model_type, mean, std):
+def create_transform(model_type, mean=None, std=None):
     """
     Create image transformation pipeline for the specified model type
 
@@ -20,7 +21,8 @@ def create_transform(model_type, mean, std):
     """
     if model_type == 'custom_cnn':
         return create_custom_cnn_transform(mean, std)
-    # elif model_type == 'pretrained_cnn'
+    elif model_type == 'pretrained_cnn':
+        return create_pretrained_cnn_transform()
     # elif model_type == 'custom_vit'
     # elif model_type == 'pretrained_vit'
     raise ValueError(f'Unknown model type: {model_type}')
@@ -44,3 +46,8 @@ def create_custom_cnn_transform(mean, std):
         transforms.ToTensor(),
         transforms.Normalize(mean=mean, std=std),
     ])
+
+
+def create_pretrained_cnn_transform():
+    weights = ResNet18_Weights.DEFAULT
+    return weights.transforms()

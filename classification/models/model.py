@@ -1,4 +1,5 @@
 from .custom_cnn import CustomCNN
+from .pretrained_cnn import PretrainedResNet18
 
 
 def create_model(model_type, num_classes):
@@ -17,7 +18,8 @@ def create_model(model_type, num_classes):
     """
     if model_type == 'custom_cnn':
         return CustomCNN(num_classes)
-    # if model_type == 'pretrained_cnn':
+    if model_type == 'pretrained_cnn':
+        return PretrainedResNet18(num_classes, freeze_backbone=True)
     # if model_type == 'pretrained_vit':
 
     raise ValueError(f'Unknown model type: {model_type}')
