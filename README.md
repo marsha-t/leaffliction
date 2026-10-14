@@ -135,7 +135,13 @@ python Transformation.py 'data/Apple/Apple_Black_rot/image (1).JPG'
 Train the custom CNN and save output in `checkpoints/custom_cnn/baseline/`:
 
 ```bash
-python train.py data/Apple --run-name baseline
+python train.py data/Apple --model custom_cnn --run-name baseline_apple
+python train.py data/Grape --model custom_cnn --run-name baseline_grape
+```
+
+```bash
+python train.py data/Apple --model pretrained_cnn --run-name baseline_apple
+python train.py data/Grape --model pretrained_cnn --run-name baseline_grape
 ```
 
 ### Predict an image label
@@ -143,7 +149,7 @@ python train.py data/Apple --run-name baseline
 Run inference using a checkpoint produced by `train.py`:
 
 ```bash
-python predict.py demo_images/predict_apple_black_rot.JPG --checkpoint checkpoints/custom_cnn/baseline/best.pt
+python predict.py demo_images/predict_apple_black_rot.JPG --checkpoint checkpoints/custom_cnn/baseline_apple/best.pt
 ```
 
 ### Restore the dateset

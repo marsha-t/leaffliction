@@ -43,10 +43,12 @@ def load_checkpoint(checkpoint_path, device):
         tuple: Restored model, preprocessing transform, and a dictionary
             mapping integer class indices to class names
     """
-    checkpoint = torch.load(checkpoint_path, map_location=device)
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
 
     model = create_model(
-        checkpoint['model_type'], len(checkpoint['class_to_index'])
+        checkpoint['model_type'],
+        len(checkpoint['class_to_index']),
+        pretrained=False
     )
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
@@ -54,8 +56,7 @@ def load_checkpoint(checkpoint_path, device):
 
     transform = create_transform(
         model_type=checkpoint['model_type'],
-        mean=checkpoint['preprocessing']['mean'],
-        std=checkpoint['preprocessing']['std'],
+        preprocessing=checkpoint['preprocessing']
     )
 
     index_to_class = {
