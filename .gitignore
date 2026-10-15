@@ -6,6 +6,5 @@ __pycache__
 .leafEnv
 *.py[cod]
 /augmented_directory/
-/checkpoints/
 /dataset_views/
 

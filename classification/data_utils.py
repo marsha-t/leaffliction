@@ -3,6 +3,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 import torch
 
+from augmentation.constants import TRAIN_AUGMENTATIONS
 from augmentation.dataset import (
     scan_dataset,
     calculate_target,
@@ -81,6 +82,7 @@ def prepare_data(dataset_root):
         augmentation_plan = create_augmentation_plan(
             train_base,
             balance_target,
+            TRAIN_AUGMENTATIONS,
             seed=42,
         )
         # preview_nested_dict(augmentation_plan, 'Augmentation Plan')
@@ -95,6 +97,7 @@ def prepare_data(dataset_root):
 
     execute_augmentation_plan(
         augmentation_plan,
+        TRAIN_AUGMENTATIONS,
         data_root=dataset_root.parent,
         augmented_root=Path('augmented_directory')
     )

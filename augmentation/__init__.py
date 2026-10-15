@@ -17,7 +17,6 @@ from .io import (
     build_augmentation_output_paths,
     save_augmented_image,
     is_augmented_image,
-    remove_empty_parents
 )
 
 __all__ = [
@@ -35,5 +34,4 @@ __all__ = [
     'build_augmentation_output_paths',
     'save_augmented_image',
     'is_augmented_image',
-    'remove_empty_parents'
 ]

@@ -1,8 +1,8 @@
 from .custom_cnn import CustomCNN
-from .custom_vit import VisionTransformer
-from .pretrained_vit import Pretrained_VisionTransformers
+from .pretrained_cnn import PretrainedResNet18
 
-def create_model(model_type, num_classes):
+
+def create_model(model_type, num_classes, pretrained=True):
     """
     Create and return model based on specified model_type
 
@@ -18,9 +18,8 @@ def create_model(model_type, num_classes):
     """
     if model_type == 'custom_cnn':
         return CustomCNN(num_classes)
-    # if model_type == 'pretrained_cnn':
-    if model_type == 'custom_vit':
-        return VisionTransformer(patch_size=16)
-    if model_type == 'pretrained_vit':
-            return Pretrained_VisionTransformers()
+    if model_type == 'pretrained_cnn':
+        return PretrainedResNet18(num_classes, pretrained=pretrained)
+    # if model_type == 'pretrained_vit':
+
     raise ValueError(f'Unknown model type: {model_type}')

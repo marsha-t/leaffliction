@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+import getpass
 import torch
 import math
 from torch.utils.data import DataLoader
@@ -7,9 +8,12 @@ import json
 from datetime import datetime
 
 from classification.data_utils import (
-    prepare_data, create_class_mapping, compute_training_stats
+    prepare_data, create_class_mapping
 )
-from classification.transforms import create_transform
+from classification.transforms import (
+    get_preprocessing_config,
+    create_transform
+)
 from classification.dataset import LeafDataset
 from classification.models import create_model
 from classification.training import train_model
@@ -31,8 +35,13 @@ def parse_arguments():
     )
     parser.add_argument(
         '--model',
-        choices=['custom_cnn', 'custom_vit', 'pretrained_vit'],  # + 'pretrained_cnn', 
-        default='custom_cnn',
+        choices=[
+            'custom_cnn',
+            'pretrained_cnn',
+            'custom_vit',
+            'pretrained_vit'
+        ],
+        default='pretrained_cnn',
         help='Model architecture to train'
     )
     parser.add_argument(
@@ -81,6 +90,30 @@ def parse_arguments():
     return args
 
 
+def configure_torch_cache():
+    """
+    Configure PyTorch cache directory based on execution environment:
+    - At 42: use user's /goinfre directory (and create cache directory if it
+        does not exist)
+    - Otherwise, use default PyTorch Hub cache
+
+    Raises:
+        OSError: If the cache directory cannot be created.
+    """
+    goinfre = Path("/goinfre")
+
+    if goinfre.is_dir():
+        username = getpass.getuser()
+        cache_dir = goinfre / username / "torch_cache"
+    else:
+        cache_dir = Path.home() / ".cache" / "torch" / "hub"
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    torch.hub.set_dir(str(cache_dir))
+
+    print(f"PyTorch cache: {cache_dir}")
+
+
 def main():
     """Prepare data, train classifier, and save checkpoints and history"""
     args = parse_arguments()
@@ -107,30 +140,28 @@ def main():
     )
     print(f'Using device: {device}')
 
+    configure_torch_cache()
+
     train, validation = prepare_data(dataset_root)
 
     class_to_index = create_class_mapping(train, validation)
 
-    mean, std = compute_training_stats(train, class_to_index)
-    print(f'Mean: {mean}')
-    print(f'Std: {std}')
-
-    train_transform = create_transform(
-        model_type=args.model,
-        mean=mean,
-        std=std
+    preprocessing = get_preprocessing_config(
+        args.model,
+        train,
+        class_to_index
     )
 
-    val_transform = create_transform(
-        model_type=args.model,
-        mean=mean,
-        std=std
+    transform = create_transform(
+        args.model,
+        preprocessing
     )
+
     train_dataset = LeafDataset(
-        train, class_to_index, train_transform
+        train, class_to_index, transform
     )
     validation_dataset = LeafDataset(
-        validation, class_to_index, val_transform
+        validation, class_to_index, transform
     )
 
     train_loader = DataLoader(
@@ -161,10 +192,7 @@ def main():
     checkpoint_metadata = {
         'model_type': args.model,
         'class_to_index': class_to_index,
-        'preprocessing': {
-            'mean': mean.tolist(),
-            'std': std.tolist(),
-        }
+        'preprocessing': preprocessing
     }
 
     history = train_model(
