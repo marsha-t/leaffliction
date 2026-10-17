@@ -10,6 +10,7 @@ import numpy as np
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+import math
 
 
 def parse_arguments():
@@ -133,7 +134,7 @@ def predict(transformed_image, device, model, index_to_class):
 
 
 def display_prediction(
-    model_type, original_image, denorm_image, predicted_class
+    model_type, original_image, denorm_image, predicted_class, model,transformed_image
 ):
     """
     Display original and transformed images alongside the
@@ -146,7 +147,7 @@ def display_prediction(
             of shape (H, W, C), with values in [0, 1]
         predicted_class (str): Predicted class name
     """
-    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(10, 5))
     fig.suptitle(f'Classification with {model_type}')
     axes[0].imshow(original_image)
     axes[1].imshow(denorm_image)
@@ -163,36 +164,57 @@ def display_prediction(
         ha="center",
         va="bottom"
     )
+    if model_type == "custom_vit":
+        model_image = np.array(
+                               original_image.convert("RGB").resize((224, 224))
+                               )
+        heatmap = calculate_heat_map(
+                                     model,
+                                     transformed_image
+                                    )
+        axes[2].imshow(model_image)
+        axes[2].imshow(
+                        heatmap,
+                        cmap="jet",
+                        alpha=np.clip(heatmap * 0.6, 0, 0.6),
+                        vmin=0,
+                        vmax=1
+                        )
+        print("Original image size:", original_image.size)
+        print("Transformed image shape:", transformed_image.shape)
+        print("Heatmap shape:", heatmap.shape)
+    axes[2].set_title("Grad-CAM", fontsize=12, fontweight="bold")
     plt.show()
 
+
 def reshape_transform(tensor):
-    tensor = tensor[:,1:,:]
-    tensor = tensor.reshape(tensor.size(0), 14,14,512)
-    tensor = tensor.permute(0,3,1,2)
-    print("tensor after reshaping :",tensor.shape)
+    tensor = tensor[:, 1:, :]
+    B, N, D = tensor.shape
+    grid_size = math.isqrt(N)
+    assert grid_size ** 2 == N
+    tensor = tensor.reshape(B, grid_size, grid_size, D)
+    tensor = tensor.permute(0, 3, 1, 2)
     return tensor
+   
 
-def calculate_heat_map(model,input_tensor, predicted_index):
-    target_layers = [model.encoder_blocks[-1].norm1]
-    with GradCAM(
-    model=model,
-    target_layers=target_layers,
-    reshape_transform=reshape_transform
-    ) as cam:
-
-     grayscale_cam = cam(
-        input_tensor=input_tensor,
-        targets=[ClassifierOutputTarget(predicted_index)]
-    )
-
+def calculate_heat_map(model, input_tensor):
+    input_tensor = input_tensor.unsqueeze(0)
+    target_layer = [model.encoders[-1].layer_norm1]
+    cam = GradCAM(model=model,
+                  target_layers=target_layer,
+                  reshape_transform=reshape_transform)
+    targets = [ClassifierOutputTarget(0)]
+    grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
     heatmap = grayscale_cam[0]
+    print("gray scale shape is ", grayscale_cam.shape)
     return heatmap
 
-def draw_heatmap(image,heatmap):
+
+def draw_heatmap(image, heatmap):
     rgb_image = np.array(
-    image.resize((224, 224)),
-        dtype=np.float32
-    ) / 255.0
+                         image.resize((224, 224)),
+                         dtype=np.float32
+                        ) / 255.0
 
     visualization = show_cam_on_image(
         rgb_image,
@@ -220,6 +242,7 @@ def main():
     with Image.open(image_path) as image:
         original_image = image.convert('RGB')
         transformed_image = loaded['transform'](original_image)
+        print("the shape of the transformed image",transformed_image.shape)
         denorm_image = denormalize_image(
             transformed_image,
             loaded['preprocessing']['mean'],
@@ -237,10 +260,10 @@ def main():
         loaded['model_type'],
         original_image,
         denorm_image,
-        predicted_class
+        predicted_class,
+        loaded['model'],
+        transformed_image
     )
-    if loaded['model_type']=="custom_vit":
-        heatmap = calculate_heat_map(loaded['model'], de)
 
 
 if __name__ == "__main__":
