@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 
 from classification.models import create_model
 from classification.transforms import create_transform
+import numpy as np
+from pytorch_grad_cam.utils.image import show_cam_on_image
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 
 
 def parse_arguments():
@@ -161,6 +165,44 @@ def display_prediction(
     )
     plt.show()
 
+def reshape_transform(tensor):
+    tensor = tensor[:,1:,:]
+    tensor = tensor.reshape(tensor.size(0), 14,14,512)
+    tensor = tensor.permute(0,3,1,2)
+    print("tensor after reshaping :",tensor.shape)
+    return tensor
+
+def calculate_heat_map(model,input_tensor, predicted_index):
+    target_layers = [model.encoder_blocks[-1].norm1]
+    with GradCAM(
+    model=model,
+    target_layers=target_layers,
+    reshape_transform=reshape_transform
+    ) as cam:
+
+     grayscale_cam = cam(
+        input_tensor=input_tensor,
+        targets=[ClassifierOutputTarget(predicted_index)]
+    )
+
+    heatmap = grayscale_cam[0]
+    return heatmap
+
+def draw_heatmap(image,heatmap):
+    rgb_image = np.array(
+    image.resize((224, 224)),
+        dtype=np.float32
+    ) / 255.0
+
+    visualization = show_cam_on_image(
+        rgb_image,
+        heatmap,
+        use_rgb=True
+    )
+
+    Image.fromarray(visualization).show()
+
+
 
 def main():
     """
@@ -197,6 +239,8 @@ def main():
         denorm_image,
         predicted_class
     )
+    if loaded['model_type']=="custom_vit":
+        heatmap = calculate_heat_map(loaded['model'], de)
 
 
 if __name__ == "__main__":

@@ -31,7 +31,7 @@ def get_preprocessing_config(
         ValueError: If the model type is unsupported or required
             training data is missing.
     """
-    if model_type == 'custom_cnn':
+    if model_type == 'custom_cnn' or model_type == "custom_vit":
         if train_samples is None or class_to_index is None:
             raise ValueError('Training data required for custom models')
         mean, std = compute_training_stats(train_samples, class_to_index)
@@ -75,19 +75,18 @@ def create_transform(model_type, preprocessing):
     Raises:
         ValueError: If the specified model type is not supported
     """
-    if model_type == 'custom_cnn':
-        return create_custom_cnn_transform(
+    if model_type == 'custom_cnn'or model_type == "custom_vit":
+        return create_custom_transform(
             preprocessing['mean'], preprocessing['std']
         )
     elif model_type == 'pretrained_cnn':
         return ResNet18_Weights[preprocessing['weights']].transforms()
-    # elif model_type == 'custom_vit'
     elif model_type == 'pretrained_vit':
         return ViT_B_16_Weights[preprocessing['weights']].transforms()
     raise ValueError(f'Unknown model type: {model_type}')
 
 
-def create_custom_cnn_transform(mean, std):
+def create_custom_transform(mean, std):
     """
     Create image transformation pipeline for custom CNN model
 
