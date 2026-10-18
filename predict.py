@@ -11,6 +11,7 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 import math
+import torch.nn.functional as F
 
 
 def parse_arguments():
@@ -133,6 +134,56 @@ def predict(transformed_image, device, model, index_to_class):
     return index_to_class[predicted_index]
 
 
+def calculate_attention_rollout(model, image_size=(224, 224)):
+    attention_matrices = [
+        block.last_attention
+        for block in model.encoders
+    ]
+    rollout = None
+    for attention in attention_matrices:
+        attention = attention.mean(dim=1)
+        B, N, _ = attention.shape
+        identity = torch.eye(
+            N,
+            device=attention.device,
+            dtype=attention.dtype
+        ).unsqueeze(0)
+        attention = attention + identity
+        attention = attention / attention.sum(
+            dim=-1,
+            keepdim=True
+        )
+        if rollout is None:
+            rollout = attention
+        else:
+            rollout = torch.bmm(attention, rollout)
+    cls_attention = rollout[:, 0, 1:]
+    B, num_patches = cls_attention.shape
+
+    grid_size = math.isqrt(num_patches)
+
+    assert grid_size ** 2 == num_patches
+
+    heatmap = cls_attention.reshape(
+        B, 1, grid_size, grid_size
+    )
+    heatmap = F.interpolate(
+        heatmap,
+        size=image_size,
+        mode="bilinear",
+        align_corners=False
+    )
+    heatmap = heatmap[:, 0]
+    heatmap = heatmap - heatmap.amin(
+        dim=(1, 2),
+        keepdim=True
+    )
+    heatmap = heatmap / (
+        heatmap.amax(dim=(1, 2), keepdim=True) + 1e-8
+    )
+    return heatmap[0]
+
+
 def display_prediction(
     model_type, original_image, denorm_image, predicted_class, model,transformed_image
 ):
@@ -147,7 +198,7 @@ def display_prediction(
             of shape (H, W, C), with values in [0, 1]
         predicted_class (str): Predicted class name
     """
-    fig, axes = plt.subplots(1, 3, figsize=(10, 5))
+    fig, axes = plt.subplots(1, 4, figsize=(10, 5))
     fig.suptitle(f'Classification with {model_type}')
     axes[0].imshow(original_image)
     axes[1].imshow(denorm_image)
@@ -180,10 +231,17 @@ def display_prediction(
                         vmin=0,
                         vmax=1
                         )
-        print("Original image size:", original_image.size)
-        print("Transformed image shape:", transformed_image.shape)
-        print("Heatmap shape:", heatmap.shape)
-    axes[2].set_title("Grad-CAM", fontsize=12, fontweight="bold")
+        rollout_heatmap = calculate_attention_rollout(model)
+        print(rollout_heatmap.shape)
+        axes[3].imshow(model_image)
+        axes[3]
+        axes[3].imshow(
+                        rollout_heatmap,
+                        cmap="jet",
+                        alpha=np.clip(heatmap * 0.6, 0, 0.6),
+                        vmin=0,
+                        vmax=1
+                        )
     plt.show()
 
 
@@ -207,6 +265,7 @@ def calculate_heat_map(model, input_tensor):
     grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
     heatmap = grayscale_cam[0]
     print("gray scale shape is ", grayscale_cam.shape)
+    print("heatmap shape is ",heatmap.shape)
     return heatmap
 
 

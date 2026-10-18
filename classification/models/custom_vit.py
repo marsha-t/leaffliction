@@ -45,6 +45,7 @@ class EncoderBlock(nn.Module):
         # the next step for scaling the score so we are avoinding the gradient problems the sqrt of this quantity is equal to the std of the score
         attention = scores/math.sqrt(self.embed_dim//self.head_nums)
         attention = torch.softmax(attention, dim=-1)
+        self.last_attention = attention.detach()
         attention = self.attention_dropout(attention)
         output = torch.matmul(attention, V)
         # [32, 8, 197,197] [32,8,197,64]= [32,8,197,64]
