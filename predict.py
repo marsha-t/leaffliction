@@ -3,12 +3,11 @@ from pathlib import Path
 import torch
 from PIL import Image
 import matplotlib.pyplot as plt
+from pytorch_grad_cam.utils.image import show_cam_on_image
 
 from classification.models import create_model
 from classification.transforms import create_transform
-import numpy as np
-
-from vit_heatmaps import calculate_attention_rollout, calculate_heat_map
+from classification.explainability import calculate_heat_map
 
 
 def parse_arguments():
@@ -119,7 +118,7 @@ def predict(transformed_image, device, model, index_to_class):
         index_to_class (dict): Mapping from class indices to class names
 
     Returns:
-        str: Predicted class name
+        tuple: (predicted index (int), predicted class name (str))
     """
     input_tensor = transformed_image.unsqueeze(0)
     input_tensor = input_tensor.to(device)
@@ -131,15 +130,13 @@ def predict(transformed_image, device, model, index_to_class):
     return predicted_index, index_to_class[predicted_index]
 
 
-
-
-
 def display_prediction(
     model_type, original_image, denorm_image, predicted_class, predicted_index, model,transformed_image
 ):
     """
     Display original and transformed images alongside the
-    model's predicted class.
+    model's predicted class. 
+    Also shows the Grad-CAM overlay
 
     Args:
         model_type (str): Model type name
@@ -150,14 +147,23 @@ def display_prediction(
     """
     fig, axes = plt.subplots(1, 4, figsize=(10, 5))
     fig.suptitle(f'Classification with {model_type}')
+
     axes[0].imshow(original_image)
+    axes[0].set_title('Original')
+
     axes[1].imshow(denorm_image)
-    fig.subplots_adjust(bottom=0.15)
+    axes[1].set_title('Preprocessed')
+
+    overlay = show_cam_on_image(denorm_image.numpy(), heatmap, use_rgb=True)
+    axes[2].imshow(overlay)
+    axes[2].set_title('Grad-CAM')
+
     for ax in axes:
         ax.set_xlim(0, 256)
         ax.set_ylim(256, 0)
         ax.set_aspect("equal")
 
+    fig.subplots_adjust(bottom=0.15)
     fig.text(
         0.5,
         0.05,
@@ -216,12 +222,17 @@ def main():
             loaded['preprocessing']['mean'],
             loaded['preprocessing']['std']
         )
-
     predicted_index, predicted_class = predict(
         transformed_image,
         device,
         loaded['model'],
         loaded['index_to_class']
+    )
+    heatmap = calculate_heat_map(
+        loaded['model'],
+        transformed_image,
+        predicted_index,
+        loaded['model_type']
     )
 
     display_prediction(
