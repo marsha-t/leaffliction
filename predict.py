@@ -7,11 +7,8 @@ import matplotlib.pyplot as plt
 from classification.models import create_model
 from classification.transforms import create_transform
 import numpy as np
-from pytorch_grad_cam.utils.image import show_cam_on_image
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-import math
-import torch.nn.functional as F
+
+from vit_heatmaps import calculate_attention_rollout, calculate_heat_map
 
 
 def parse_arguments():
@@ -131,61 +128,14 @@ def predict(transformed_image, device, model, index_to_class):
         logits = model(input_tensor)
         predicted_index = logits.argmax(dim=1).item()
 
-    return index_to_class[predicted_index]
+    return predicted_index, index_to_class[predicted_index]
 
 
-def calculate_attention_rollout(model, image_size=(224, 224)):
-    attention_matrices = [
-        block.last_attention
-        for block in model.encoders
-    ]
-    rollout = None
-    for attention in attention_matrices:
-        attention = attention.mean(dim=1)
-        B, N, _ = attention.shape
-        identity = torch.eye(
-            N,
-            device=attention.device,
-            dtype=attention.dtype
-        ).unsqueeze(0)
-        attention = attention + identity
-        attention = attention / attention.sum(
-            dim=-1,
-            keepdim=True
-        )
-        if rollout is None:
-            rollout = attention
-        else:
-            rollout = torch.bmm(attention, rollout)
-    cls_attention = rollout[:, 0, 1:]
-    B, num_patches = cls_attention.shape
 
-    grid_size = math.isqrt(num_patches)
-
-    assert grid_size ** 2 == num_patches
-
-    heatmap = cls_attention.reshape(
-        B, 1, grid_size, grid_size
-    )
-    heatmap = F.interpolate(
-        heatmap,
-        size=image_size,
-        mode="bilinear",
-        align_corners=False
-    )
-    heatmap = heatmap[:, 0]
-    heatmap = heatmap - heatmap.amin(
-        dim=(1, 2),
-        keepdim=True
-    )
-    heatmap = heatmap / (
-        heatmap.amax(dim=(1, 2), keepdim=True) + 1e-8
-    )
-    return heatmap[0]
 
 
 def display_prediction(
-    model_type, original_image, denorm_image, predicted_class, model,transformed_image
+    model_type, original_image, denorm_image, predicted_class, predicted_index, model,transformed_image
 ):
     """
     Display original and transformed images alongside the
@@ -221,7 +171,8 @@ def display_prediction(
                                )
         heatmap = calculate_heat_map(
                                      model,
-                                     transformed_image
+                                     transformed_image,
+                                     predicted_index
                                     )
         axes[2].imshow(model_image)
         axes[2].imshow(
@@ -243,46 +194,6 @@ def display_prediction(
                         vmax=1
                         )
     plt.show()
-
-
-def reshape_transform(tensor):
-    tensor = tensor[:, 1:, :]
-    B, N, D = tensor.shape
-    grid_size = math.isqrt(N)
-    assert grid_size ** 2 == N
-    tensor = tensor.reshape(B, grid_size, grid_size, D)
-    tensor = tensor.permute(0, 3, 1, 2)
-    return tensor
-   
-
-def calculate_heat_map(model, input_tensor):
-    input_tensor = input_tensor.unsqueeze(0)
-    target_layer = [model.encoders[-1].layer_norm1]
-    cam = GradCAM(model=model,
-                  target_layers=target_layer,
-                  reshape_transform=reshape_transform)
-    targets = [ClassifierOutputTarget(0)]
-    grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
-    heatmap = grayscale_cam[0]
-    print("gray scale shape is ", grayscale_cam.shape)
-    print("heatmap shape is ",heatmap.shape)
-    return heatmap
-
-
-def draw_heatmap(image, heatmap):
-    rgb_image = np.array(
-                         image.resize((224, 224)),
-                         dtype=np.float32
-                        ) / 255.0
-
-    visualization = show_cam_on_image(
-        rgb_image,
-        heatmap,
-        use_rgb=True
-    )
-
-    Image.fromarray(visualization).show()
-
 
 
 def main():
@@ -308,7 +219,7 @@ def main():
             loaded['preprocessing']['std']
         )
 
-    predicted_class = predict(
+    predicted_index, predicted_class = predict(
         transformed_image,
         device,
         loaded['model'],
@@ -320,6 +231,7 @@ def main():
         original_image,
         denorm_image,
         predicted_class,
+        predicted_index,
         loaded['model'],
         transformed_image
     )

@@ -1,7 +1,7 @@
 from .custom_cnn import CustomCNN
 from .pretrained_cnn import PretrainedResNet18
 from .custom_vit import VisionTransformer
-
+from .pretrained_vit import Pretrained_VisionTransformers
 
 def create_model(model_type, num_classes, pretrained=True):
     """
@@ -22,7 +22,8 @@ def create_model(model_type, num_classes, pretrained=True):
     if model_type == 'pretrained_cnn':
         return PretrainedResNet18(num_classes, pretrained=pretrained)
     if model_type == 'custom_vit':
-            return VisionTransformer()
-    # if model_type == 'pretrained_vit':
+        return VisionTransformer()
+    if model_type == 'pretrained_vit':
+        return Pretrained_VisionTransformers()
 
     raise ValueError(f'Unknown model type: {model_type}')
