@@ -189,9 +189,7 @@ def display_prediction(
         axes[3].imshow(
                         rollout_heatmap,
                         cmap="jet",
-                        alpha=np.clip(heatmap * 0.6, 0, 0.6),
-                        vmin=0,
-                        vmax=1
+                        alpha=0.25
                         )
     plt.show()
 
