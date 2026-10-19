@@ -5,7 +5,7 @@ from .transforms import create_transform
 from .dataset import LeafDataset
 from .models import create_model, CustomCNN
 from .training import train_model
-from .explainability import calculate_heat_map
+from .explainability import calculate_heatmap, calculate_attention_rollout
 
 __all__ = [
     'prepare_data',
@@ -16,5 +16,6 @@ __all__ = [
     'create_model',
     'CustomCNN',
     'train_model',
-    'calculate_heat_map'
+    'calculate_heatmap',
+    'calculate_attention_rollout'
 ]

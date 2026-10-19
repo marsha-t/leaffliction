@@ -7,7 +7,8 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 
 from classification.models import create_model
 from classification.transforms import create_transform
-from classification.explainability import calculate_heat_map
+from classification.explainability import calculate_heatmap, calculate_attention_rollout
+import numpy as np
 
 
 def parse_arguments():
@@ -131,7 +132,7 @@ def predict(transformed_image, device, model, index_to_class):
 
 
 def display_prediction(
-    model_type, original_image, denorm_image, predicted_class, predicted_index, model,transformed_image
+    model_type, original_image, denorm_image, predicted_class, predicted_index, model,transformed_image,heatmap
 ):
     """
     Display original and transformed images alongside the
@@ -172,31 +173,11 @@ def display_prediction(
         va="bottom"
     )
     if model_type == "custom_vit":
-        model_image = np.array(
-                               original_image.convert("RGB").resize((224, 224))
-                               )
-        heatmap = calculate_heat_map(
-                                     model,
-                                     transformed_image,
-                                     predicted_index
-                                    )
-        axes[2].imshow(model_image)
-        axes[2].imshow(
-                        heatmap,
-                        cmap="jet",
-                        alpha=np.clip(heatmap * 0.6, 0, 0.6),
-                        vmin=0,
-                        vmax=1
-                        )
         rollout_heatmap = calculate_attention_rollout(model)
         print(rollout_heatmap.shape)
-        axes[3].imshow(model_image)
-        axes[3]
-        axes[3].imshow(
-                        rollout_heatmap,
-                        cmap="jet",
-                        alpha=0.25
-                        )
+        overlay = show_cam_on_image(denorm_image.numpy(), heatmap, use_rgb=True)
+        axes[3].imshow(overlay)
+        axes[3].set_title('Attention-Rollout')
     plt.show()
 
 
@@ -228,7 +209,7 @@ def main():
         loaded['model'],
         loaded['index_to_class']
     )
-    heatmap = calculate_heat_map(
+    heatmap = calculate_heatmap(
         loaded['model'],
         transformed_image,
         predicted_index,
@@ -242,7 +223,9 @@ def main():
         predicted_class,
         predicted_index,
         loaded['model'],
-        transformed_image
+        transformed_image,
+        heatmap
+
     )
 
 
