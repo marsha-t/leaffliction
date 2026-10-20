@@ -1,7 +1,7 @@
 from pathlib import Path
 from collections import defaultdict
 
-IMAGE_EXTENSIONS = ('.jpg', '.png')
+from .validation import IMAGE_EXTENSIONS
 
 
 def analyse_directory(path: str) -> dict[str, int]:

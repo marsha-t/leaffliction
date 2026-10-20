@@ -121,7 +121,6 @@ python Augmentation.py data/Apple
 
 The balanced dataset is written to `augmented_directory/`.
 
-
 ### Apply Transformations 
 
 Apply and visualise the image-transformation pipeline on a single image:

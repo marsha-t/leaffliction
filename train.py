@@ -144,70 +144,70 @@ def main():
 
     train, validation = prepare_data(dataset_root)
 
-    class_to_index = create_class_mapping(train, validation)
+    # class_to_index = create_class_mapping(train, validation)
 
-    preprocessing = get_preprocessing_config(
-        args.model,
-        train,
-        class_to_index
-    )
+    # preprocessing = get_preprocessing_config(
+    #     args.model,
+    #     train,
+    #     class_to_index
+    # )
 
-    transform = create_transform(
-        args.model,
-        preprocessing
-    )
+    # transform = create_transform(
+    #     args.model,
+    #     preprocessing
+    # )
 
-    train_dataset = LeafDataset(
-        train, class_to_index, transform
-    )
-    validation_dataset = LeafDataset(
-        validation, class_to_index, transform
-    )
+    # train_dataset = LeafDataset(
+    #     train, class_to_index, transform
+    # )
+    # validation_dataset = LeafDataset(
+    #     validation, class_to_index, transform
+    # )
 
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=args.batch_size,
-        shuffle=True
-    )
-    validation_loader = DataLoader(
-        validation_dataset,
-        batch_size=args.batch_size,
-        shuffle=False
-    )
+    # train_loader = DataLoader(
+    #     train_dataset,
+    #     batch_size=args.batch_size,
+    #     shuffle=True
+    # )
+    # validation_loader = DataLoader(
+    #     validation_dataset,
+    #     batch_size=args.batch_size,
+    #     shuffle=False
+    # )
 
-    model = create_model(args.model, len(class_to_index))
-    model = model.to(device)
-    print('----Model----')
-    print(model)
-    num_parameters = sum(
-        p.numel()
-        for p in model.parameters()
-    )
-    num_trainable = sum(
-        p.numel() for p in model.parameters() if p.requires_grad
-    )
-    print(f'No. of parameters: {num_parameters}')
-    print(f'No. of trainable parameters: {num_trainable}')
+    # model = create_model(args.model, len(class_to_index))
+    # model = model.to(device)
+    # print('----Model----')
+    # print(model)
+    # num_parameters = sum(
+    #     p.numel()
+    #     for p in model.parameters()
+    # )
+    # num_trainable = sum(
+    #     p.numel() for p in model.parameters() if p.requires_grad
+    # )
+    # print(f'No. of parameters: {num_parameters}')
+    # print(f'No. of trainable parameters: {num_trainable}')
 
-    checkpoint_metadata = {
-        'model_type': args.model,
-        'class_to_index': class_to_index,
-        'preprocessing': preprocessing
-    }
+    # checkpoint_metadata = {
+    #     'model_type': args.model,
+    #     'class_to_index': class_to_index,
+    #     'preprocessing': preprocessing
+    # }
 
-    history = train_model(
-        model,
-        train_loader,
-        validation_loader,
-        device,
-        args.learning_rate,
-        args.epochs,
-        checkpoint_dir,
-        checkpoint_metadata
-    )
-    history_path = checkpoint_dir / 'history.json'
-    with history_path.open('w', encoding='utf-8') as history_file:
-        json.dump(history, history_file, indent=2)
+    # history = train_model(
+    #     model,
+    #     train_loader,
+    #     validation_loader,
+    #     device,
+    #     args.learning_rate,
+    #     args.epochs,
+    #     checkpoint_dir,
+    #     checkpoint_metadata
+    # )
+    # history_path = checkpoint_dir / 'history.json'
+    # with history_path.open('w', encoding='utf-8') as history_file:
+    #     json.dump(history, history_file, indent=2)
 
 
 if __name__ == "__main__":

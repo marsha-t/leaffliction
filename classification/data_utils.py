@@ -46,8 +46,7 @@ def prepare_data(dataset_root):
     Either reuse existing manifest or create a split with 20% validation data
         per class and plan augmentations to balance the training set.
     Generate missing augmentations before loading the final sample paths.
-    Augmented images are saved in both the source dataset and
-        /augmented_directory. 
+    Augmented images are saved in the source dataset.
     Manifests are stored under manifests/<dataset name>.
 
     Args:
@@ -63,18 +62,14 @@ def prepare_data(dataset_root):
         augmentation_plan = create_plan_from_manifest(train)
     else:
         dataset = scan_dataset(dataset_root)
-        # preview_nested_dict(dataset, 'Dataset')
 
         train_split, validation_split = split_originals(
             dataset,
             validation_ratio=0.2,
             seed=42
         )
-        # preview_nested_dict(train_split, 'Train')
-        # preview_nested_dict(validation_split, 'Validation')
 
         train_base = select_originals(dataset, train_split)
-        # preview_nested_dict(train_base, 'Train + Existing Augmented')
 
         balance_target = calculate_target(train_base)
         print(balance_target)
@@ -85,7 +80,6 @@ def prepare_data(dataset_root):
             TRAIN_AUGMENTATIONS,
             seed=42,
         )
-        # preview_nested_dict(augmentation_plan, 'Augmentation Plan')
 
         save_dataset_manifest(
             train_base,
@@ -99,7 +93,6 @@ def prepare_data(dataset_root):
         augmentation_plan,
         TRAIN_AUGMENTATIONS,
         data_root=dataset_root.parent,
-        augmented_root=Path('augmented_directory')
     )
 
     train, validation = load_dataset_manifest(manifest_path, dataset_root)
