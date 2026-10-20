@@ -1,7 +1,9 @@
 #! /usr/bin/env python3
 import argparse
 import cv2
+from pathlib import Path
 
+from analysis import IMAGE_EXTENSIONS
 from transformation.segmentation import (
     create_leaf_mask,
     largest_contour,
@@ -12,7 +14,15 @@ from transformation.analysis import (
     compute_landmarks,
     colour_histogram
 )
-from transformation.visualisation import display_pipeline
+from transformation.visualisation import (
+    render_pipeline, display_pipeline, save_pipeline
+)
+
+
+PROTECTED_DIRECTORIES = [
+    Path('data'),
+    Path('augmented_directory')
+]
 
 
 def parse_args():
@@ -25,9 +35,70 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Analyse leaf shape and colour and display transformations'
     )
-    parser.add_argument('image_path', help='image path')
+    parser.add_argument('path', help='image or directory path')
+    parser.add_argument(
+        "--dst", "-dst",
+        help="Destination directory for transformed images"
+    )
+
     args = parser.parse_args()
     return args
+
+
+def paths_overlap(path_a, path_b):
+    """
+    Check whether two paths are identical or one contains the other
+    """
+    a = path_a.resolve()
+    b = path_b.resolve()
+
+    return a == b or a in b.parents or b in a.parents
+
+
+def validate_src_dest(src, dst):
+    """
+    Validate source and destination directories
+
+    Args:
+        src (Path): Source directory containing images
+        dst (Path): Destination directory for transformed images
+
+    Returns:
+        Path: Resolved destination directory path.
+
+    Raises:
+        NotADirectoryError: If the source is not a directory or the
+            destination exists but is not a directory.
+        ValueError: If the destination overlaps with the source or
+            protected directories, or is not empty.
+    """
+    src = src.resolve()
+    dst = dst.resolve()
+
+    if not src.is_dir():
+        raise NotADirectoryError(
+            f"Source directory does not exist: {src}"
+        )
+
+    if paths_overlap(src, dst):
+        raise ValueError(
+            "Destination must not overlap with source directory"
+        )
+
+    for protected in PROTECTED_DIRECTORIES:
+        if paths_overlap(dst, protected):
+            raise ValueError(
+                f"Destination overlaps protected directory: "
+                f"{protected.resolve()}"
+            )
+
+    if dst.exists():
+        if not dst.is_dir():
+            raise NotADirectoryError(
+                f"Destination is not a directory: {dst}"
+            )
+
+    return dst
 
 
 def transformation_pipeline(image):
@@ -61,17 +132,54 @@ def transformation_pipeline(image):
     return pipeline
 
 
+def process_directory(src, dst):
+    """
+    Process images in a source directory and save transformations.
+    """
+    dst = validate_src_dest(src, dst)
+    image_paths = sorted(
+        path for path in src.iterdir()
+        if path.is_file()
+        and path.suffix.lower() in IMAGE_EXTENSIONS
+    )
+
+    if not image_paths:
+        raise ValueError(f"No images found in {src}")
+
+    dst.mkdir(parents=True, exist_ok=True)
+
+    for image_path in image_paths:
+        image = cv2.imread(str(image_path))
+
+        if image is None:
+            print(f"Skipping unreadable image: {image_path}")
+            continue
+
+        pipeline = transformation_pipeline(image)
+        images = render_pipeline(image, pipeline)
+
+        save_pipeline(images, image_path, dst)
+
+        print(f"Processed: {image_path.name}")
+
+
 def main():
-    """Load specified image and display its analysis"""
+    """Display or save leaf transformations"""
     try:
         args = parse_args()
 
-        image = cv2.imread(args.image_path)  # OpenCV manages file internally
-        if image is None:
-            raise FileNotFoundError(f"Could not read image: {args.image_path}")
-        pipeline = transformation_pipeline(image)
-        display_pipeline(image, pipeline)
-
+        path = Path(args.path)
+        if path.is_file():
+            image = cv2.imread(args.path)  # OpenCV manages file internally
+            if image is None:
+                raise FileNotFoundError(f"Could not read image: {args.path}")
+            pipeline = transformation_pipeline(image)
+            images = render_pipeline(image, pipeline)
+            display_pipeline(images)
+        elif path.is_dir():
+            process_directory(Path(path), Path(args.dst))
+        else:
+            raise FileNotFoundError(f'Invalid path: {path}')
     except Exception as e:
         print("Exception:", e)
 

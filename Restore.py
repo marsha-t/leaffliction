@@ -65,6 +65,7 @@ def remove_augmented_files(dataset_root, remove_augmented_directory=True):
     """
     dataset = scan_dataset(dataset_root)
     data_root = dataset_root.parent
+    augmented_root = Path("augmented_directory").resolve()
 
     for class_name, images in dataset.items():
         removed = 0
@@ -86,7 +87,6 @@ def remove_augmented_files(dataset_root, remove_augmented_directory=True):
         print(f"Removed {removed} augmentations for {class_name}")
 
     if remove_augmented_directory:
-        augmented_root = Path("augmented_directory").resolve()
         augmented_dataset = augmented_root / dataset_root.name
 
         if augmented_dataset.is_dir():
@@ -145,6 +145,17 @@ def remove_symlinks(dataset_root):
     print(f"Removed {removed} dataset-view symbolic links")
 
 
+def remove_transformation_outputs():
+    """
+    Remove generated transformation outputs
+    """
+    output_root = Path("transformation_outputs").resolve()
+
+    if output_root.is_dir() and not output_root.is_symlink():
+        shutil.rmtree(output_root)
+        print(f"Removed transformation outputs: {output_root}")
+
+
 def main():
     """
     Remove detected dataset augmentations & copies, symlinks and manifest
@@ -158,6 +169,7 @@ def main():
         remove_augmented_files(
             dataset_root, remove_augmented_directory=not args.evaluation
         )
+        remove_transformation_outputs()
         if not args.evaluation:
             remove_manifest(dataset_root)
     except Exception as e:
