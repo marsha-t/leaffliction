@@ -178,3 +178,14 @@ also vary with hardware and execution settings.
 
 A shared manifest therefore preserves the dataset split but does not
 guarantee identical model weights or metrics across training runs.
+
+## custom vision transformers
+### Preprocessing
+for vision transformers and all the preprocessing i took the image worth 16 X 16 tokens paper 
+and for preprocessing they resize the image into 224 224 and also they normalize the image using the mean and standard deviation they also used random rotation and     to avoid the model from overfitting however i did not implement that as i already used my augmentation technique to balance the data so the data is already augmented 
+
+### Architecture
+intially i used the most basic architucture and then i was thining of make it biggere based on the performance however my basid architecture well performed and is consist of 6 encoder blocks and for the embedding dimension i used 512 and all the rest of the architecture i used the paper as a reference
+
+### Training and Model Selection
+for that i used the same approaches of the custome cnn however to avoid overfitting i used the schedular which is help in reducing the learning rate whenever over fitting has been detected also i started by adam as optimizer but then found out the model is overfitting s i used adam w decay wich elp the weight from getting too large as for the vit that can happen due to model pig structure i also add to avoid overfitting dropouts however it did not change in the performance much there is also class standardization which suggested by the paper however model was not in need for that as thenumber of classes is only 4 

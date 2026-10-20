@@ -93,7 +93,7 @@ class VisionTransformer(nn.Module):
           flatten patches """
         B, C, H, W = images.shape
         patches = images.unfold(2, self.patch_size, self.patch_size).unfold(3,
-                                                                            self.patch_size, self.patch_size)
+                                                                                         self.patch_size, self.patch_size)
         patches = patches.permute(0, 2, 3, 1, 4, 5)
         patches = patches.reshape(B, self.patch_nums, -1)
         return patches
