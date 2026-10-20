@@ -27,6 +27,22 @@ The augmentation module supports both individual image augmentation and
 dataset balancing. For dataset balancing, augmentations are generated until
 each class reaches the size of the current majority class.
 
+### Augmentation outputs
+
+The augmentation module is shared by the standalone augmentation command (Part 2) and the classification pipeline (Part 4). The two workflows use the same augmentation functions but have different output requirements.
+
+| Workflow | Source dataset | `augmented_directory` |
+| --- | --- | --- |
+| Single-image augmentation | Save all six augmentations alongside the original | Not modified |
+| Dataset balancing | Save generated augmentations alongside the originals | Create a complete balanced copy of the dataset |
+| Classification | Save planned training augmentations alongside the originals | Not modified |
+
+The image-saving functions accept an optional `augmented_root` argument. When omitted, augmented images are saved only alongside their originals. When provided, an additional copy is saved under the specified destination, preserving the dataset's directory structure.
+
+This keeps the classification pipeline independent of `augmented_directory`, which is reserved for demonstrating dataset balancing during evaluation.
+
+Augmentation execution skips an image-augmentation pair when all required output files already exist. This allows interrupted executions to resume without unnecessarily regenerating completed outputs.
+
 ### Augmentation scheduling
 
 Only original images are used as augmentation sources; generated images are
@@ -55,12 +71,9 @@ applies to the dataset-balancing workflow.
 
 ### Rerunnable pipeline
 
-The pipeline is designed to be safely rerunnable. If augmentation is
-interrupted or executed multiple times, existing augmentations are detected
-automatically and count towards the balancing target.
+The pipeline is designed to be safely rerunnable. During dataset balancing, existing augmentations are detected automatically and count towards the balancing target, preventing unnecessary augmentation and uncontrolled dataset growth.
 
-This avoids unnecessary computation and prevents exponential dataset growth
-from repeatedly augmenting previously generated images.
+During execution, planned augmentations are skipped when all required output files already exist. This allows interrupted operations to resume without regenerating completed outputs.
 
 ### Alternatives considered
 
@@ -100,7 +113,26 @@ The manifest fixes the training and validation file assignments and the augmenta
 It records both original images and the specific augmentations selected for training.
 The manifest is saved before augmentation execution. Subsequent runs reuse its assignments and reconstruct the same augmentation plan rather than selecting new augmentations or creating a new split. Missing augmentation
 outputs are regenerated according to this plan.
-Reusing the manifest assumes that the original images and dataset structure remain unchanged. Restore.py removes the manifest and detected augmentation outputs, allowing the next training run to create a new manifest.
+
+Reusing the manifest assumes that the original images and dataset structure remain unchanged. 
+
+### Dataset restoration and evaluation preparation
+
+`Restore.py` supports two cleanup modes to accommodate development and evaluation workflows.
+
+| Component | Full restoration | Evaluation preparation (`--evaluation`) |
+| --- | --- | --- |
+| Original images | Preserve | Preserve |
+| Augmented images in source dataset | Remove | Remove |
+| Balanced dataset in `augmented_directory` | Remove | Preserve |
+| Classification manifest | Remove | Preserve |
+| Generated training and validation symlinks | Remove | Remove |
+
+Full restoration returns the source dataset to its original state and removes generated artifacts, including the classification manifest. A subsequent training run therefore creates a new split and augmentation plan.
+
+Evaluation preparation removes generated images from the source dataset and the symbolic links used to inspect training and validation assignments, while preserving the balanced dataset and classification manifest.
+
+The preserved manifest allows the classification pipeline to reconstruct the same augmentation plan and regenerate missing training images when training is executed again. This enables evaluation of the classification workflow without requiring `augmented_directory` to be regenerated or modified.
 
 ## Custom CNN
 

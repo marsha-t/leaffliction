@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import argparse
 from pathlib import Path
+import shutil
 
 from augmentation.dataset import scan_dataset
 from augmentation.io import (
@@ -20,6 +21,11 @@ def parse_args():
             "Remove dataset augmentations, classification manifest and "
             "generated symbolic links"
         )
+    )
+    parser.add_argument(
+        '--evaluation',
+        action='store_true',
+        help='Prepare for evaluation: keeps manifests and augmented_directory'
     )
     parser.add_argument('directory_path', help='Dataset directory path')
     return parser.parse_args()
@@ -48,19 +54,17 @@ def remove_empty_directories(directory: Path, stop: Path):
         directory = directory.parent
 
 
-def remove_augmented_files(dataset_root):
+def remove_augmented_files(dataset_root, remove_augmented_directory=True):
     """
-    Remove detected augmented images from source directory and
-        augmented_directory
+    Remove detected augmented images from source directory.
+    Optionally remove balanced dataset in augmented_directory
 
     Args:
         dataset_root (Path): Root directory of source dataset
+        remove_augmented_directory (bool): Whether to remove augmented_directory
     """
     dataset = scan_dataset(dataset_root)
     data_root = dataset_root.parent
-    augmented_root = Path(
-        "augmented_directory"
-    ).resolve()
 
     for class_name, images in dataset.items():
         removed = 0
@@ -79,16 +83,17 @@ def remove_augmented_files(dataset_root):
                     original_output.unlink()
                     removed += 1
 
-                if augmented_output.exists():
-                    augmented_output.unlink()
-                    remove_empty_directories(
-                        augmented_output.parent,
-                        augmented_root
-                    )
         print(f"Removed {removed} augmentations for {class_name}")
 
-    if augmented_root.exists():
-        remove_empty_directories(augmented_root, augmented_root)
+    if remove_augmented_directory:
+        augmented_root = Path("augmented_directory").resolve()
+        augmented_dataset = augmented_root / dataset_root.name
+
+        if augmented_dataset.is_dir():
+            shutil.rmtree(augmented_dataset)
+            print(f"Removed augmented dataset: {augmented_dataset}")
+        if augmented_root.exists():
+            remove_empty_directories(augmented_root, augmented_root)
 
 
 def remove_manifest(dataset_root):
@@ -147,13 +152,14 @@ def main():
     try:
         args = parse_args()
 
-        dataset_root = Path(
-            args.directory_path
-        ).resolve()
+        dataset_root = Path(args.directory_path).resolve()
 
         remove_symlinks(dataset_root)
-        remove_augmented_files(dataset_root)
-        remove_manifest(dataset_root)
+        remove_augmented_files(
+            dataset_root, remove_augmented_directory=not args.evaluation
+        )
+        if not args.evaluation:
+            remove_manifest(dataset_root)
     except Exception as e:
         print("Exception:", e)
 

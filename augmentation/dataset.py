@@ -2,7 +2,7 @@ import random
 from PIL import Image
 from pathlib import Path
 
-from analysis import validate_directory
+from analysis import IMAGE_EXTENSIONS, validate_directory
 from augmentation.io import (
     parse_augmented_path,
     save_augmented_image,
@@ -46,7 +46,7 @@ def scan_dataset(root):
 
         images = {}
         for file in sub_dir.iterdir():
-            if not file.is_file():
+            if not file.is_file() or file.suffix.lower() not in IMAGE_EXTENSIONS:
                 continue
 
             parsed = parse_augmented_path(file)
@@ -179,7 +179,7 @@ def execute_augmentation_plan(
     plan,
     augmentations_list,
     data_root=Path("data"),
-    augmented_root=Path("augmented_directory"),
+    augmented_root=None,
 ):
     """
     Generate augmented images specified by plan
@@ -191,7 +191,7 @@ def execute_augmentation_plan(
         augmentations_list (list): Available augmentation operations in
             (name, callable) tuples
         data_root (Path): Root directory containing the source dataset
-        augmented_root (Path): Root directory for additional copies of
+        augmented_root (Path or None): Root directory for additional copies of
             augmented images
     """
     augmentation_functions = dict(augmentations_list)
@@ -210,7 +210,10 @@ def execute_augmentation_plan(
                 )
             )
 
-            if original_output.exists() and augmented_output.exists():
+            if (
+                original_output.exists() and
+                (augmented_output is None or augmented_output.exists())
+            ):
                 skipped += 1
                 continue
 
