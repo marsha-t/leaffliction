@@ -61,7 +61,8 @@ def remove_augmented_files(dataset_root, remove_augmented_directory=True):
 
     Args:
         dataset_root (Path): Root directory of source dataset
-        remove_augmented_directory (bool): Whether to remove augmented_directory
+        remove_augmented_directory (bool): Whether to remove
+            augmented_directory
     """
     dataset = scan_dataset(dataset_root)
     data_root = dataset_root.parent

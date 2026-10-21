@@ -9,15 +9,15 @@ def validate_directory(path: str) -> list[str]:
         of images
 
     Args:
-    path (str): directory path
+        path (str): directory path
 
     Return:
-    List(str): list of warnings
-        - there are files in directory (instead of sub-directories)
-        - there are non-image files in sub-directory
+        List(str): list of warnings
+            - there are files in directory (instead of sub-directories)
+            - there are non-image files in sub-directory
 
     Raises:
-    ValueError if path does not exist or path is not to a directory
+        ValueError if path does not exist or path is not to a directory
     """
     dataset_dir = Path(path)
     warnings = []

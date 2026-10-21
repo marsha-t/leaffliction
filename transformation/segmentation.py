@@ -1,5 +1,4 @@
 import cv2
-# import numpy as np
 
 
 def create_leaf_mask(image):
@@ -18,11 +17,6 @@ def create_leaf_mask(image):
         gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
     )
 
-    # TODO consider adding morphological operations to tidy up mask
-    # kernel = np.ones((5, 5), np.uint8)
-    # mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    # mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-
     return mask
 
 
@@ -37,8 +31,8 @@ def largest_contour(mask):
         np.ndarray: Contour with the largest area
     """
     contours, _ = cv2.findContours(
-            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
 
     largest = max(contours, key=cv2.contourArea)
 

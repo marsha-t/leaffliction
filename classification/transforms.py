@@ -75,7 +75,7 @@ def create_transform(model_type, preprocessing):
     Raises:
         ValueError: If the specified model type is not supported
     """
-    if model_type == 'custom_cnn'or model_type == "custom_vit":
+    if model_type == 'custom_cnn' or model_type == "custom_vit":
         return create_custom_transform(
             preprocessing['mean'], preprocessing['std']
         )

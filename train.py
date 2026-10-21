@@ -116,98 +116,101 @@ def configure_torch_cache():
 
 def main():
     """Prepare data, train classifier, and save checkpoints and history"""
-    args = parse_arguments()
-
-    run_name = args.run_name or datetime.now().strftime(
-        '%Y-%m-%d_%H-%M-%S-%f'
-    )
-    checkpoint_dir = Path('checkpoints') / args.model / run_name
-
     try:
-        checkpoint_dir.mkdir(parents=True, exist_ok=False)
-    except FileExistsError:
-        raise SystemExit(
-            f'Run directory already exists: {checkpoint_dir}. '
-            'Choose another --run-name.'
+        args = parse_arguments()
+
+        run_name = args.run_name or datetime.now().strftime(
+            '%Y-%m-%d_%H-%M-%S-%f'
+        )
+        checkpoint_dir = Path('checkpoints') / args.model / run_name
+
+        try:
+            checkpoint_dir.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            raise SystemExit(
+                f'Run directory already exists: {checkpoint_dir}. '
+                'Choose another --run-name.'
+            )
+
+        print(f'Run outputs: {checkpoint_dir}')
+
+        dataset_root = Path(args.dataset).resolve()
+
+        device = torch.device(
+            'cuda' if torch.cuda.is_available() else 'cpu'
+        )
+        print(f'Using device: {device}')
+
+        configure_torch_cache()
+
+        train, validation = prepare_data(dataset_root)
+
+        class_to_index = create_class_mapping(train, validation)
+
+        preprocessing = get_preprocessing_config(
+            args.model,
+            train,
+            class_to_index
         )
 
-    print(f'Run outputs: {checkpoint_dir}')
+        transform = create_transform(
+            args.model,
+            preprocessing
+        )
 
-    dataset_root = Path(args.dataset).resolve()
+        train_dataset = LeafDataset(
+            train, class_to_index, transform
+        )
+        validation_dataset = LeafDataset(
+            validation, class_to_index, transform
+        )
 
-    device = torch.device(
-        'cuda' if torch.cuda.is_available() else 'cpu'
-    )
-    print(f'Using device: {device}')
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=args.batch_size,
+            shuffle=True
+        )
+        validation_loader = DataLoader(
+            validation_dataset,
+            batch_size=args.batch_size,
+            shuffle=False
+        )
 
-    configure_torch_cache()
+        model = create_model(args.model, len(class_to_index))
+        model = model.to(device)
+        print('----Model----')
+        print(model)
+        num_parameters = sum(
+            p.numel()
+            for p in model.parameters()
+        )
+        num_trainable = sum(
+            p.numel() for p in model.parameters() if p.requires_grad
+        )
+        print(f'No. of parameters: {num_parameters}')
+        print(f'No. of trainable parameters: {num_trainable}')
 
-    train, validation = prepare_data(dataset_root)
+        checkpoint_metadata = {
+            'model_type': args.model,
+            'class_to_index': class_to_index,
+            'preprocessing': preprocessing
+        }
 
-    # class_to_index = create_class_mapping(train, validation)
-
-    # preprocessing = get_preprocessing_config(
-    #     args.model,
-    #     train,
-    #     class_to_index
-    # )
-
-    # transform = create_transform(
-    #     args.model,
-    #     preprocessing
-    # )
-
-    # train_dataset = LeafDataset(
-    #     train, class_to_index, transform
-    # )
-    # validation_dataset = LeafDataset(
-    #     validation, class_to_index, transform
-    # )
-
-    # train_loader = DataLoader(
-    #     train_dataset,
-    #     batch_size=args.batch_size,
-    #     shuffle=True
-    # )
-    # validation_loader = DataLoader(
-    #     validation_dataset,
-    #     batch_size=args.batch_size,
-    #     shuffle=False
-    # )
-
-    # model = create_model(args.model, len(class_to_index))
-    # model = model.to(device)
-    # print('----Model----')
-    # print(model)
-    # num_parameters = sum(
-    #     p.numel()
-    #     for p in model.parameters()
-    # )
-    # num_trainable = sum(
-    #     p.numel() for p in model.parameters() if p.requires_grad
-    # )
-    # print(f'No. of parameters: {num_parameters}')
-    # print(f'No. of trainable parameters: {num_trainable}')
-
-    # checkpoint_metadata = {
-    #     'model_type': args.model,
-    #     'class_to_index': class_to_index,
-    #     'preprocessing': preprocessing
-    # }
-
-    # history = train_model(
-    #     model,
-    #     train_loader,
-    #     validation_loader,
-    #     device,
-    #     args.learning_rate,
-    #     args.epochs,
-    #     checkpoint_dir,
-    #     checkpoint_metadata
-    # )
-    # history_path = checkpoint_dir / 'history.json'
-    # with history_path.open('w', encoding='utf-8') as history_file:
-    #     json.dump(history, history_file, indent=2)
+        history = train_model(
+            model,
+            train_loader,
+            validation_loader,
+            device,
+            args.learning_rate,
+            args.epochs,
+            checkpoint_dir,
+            checkpoint_metadata
+        )
+        history_path = checkpoint_dir / 'history.json'
+        with history_path.open('w', encoding='utf-8') as history_file:
+            json.dump(history, history_file, indent=2)
+    except Exception as e:
+        print("Exception: ", e)
 
 
 if __name__ == "__main__":

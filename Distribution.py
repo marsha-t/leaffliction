@@ -26,15 +26,18 @@ def main():
     - Analyse image distribution
     - Display bar and pie chart
     """
-    args = parse_args()
+    try:
+        args = parse_args()
 
-    warnings = validate_directory(args.directory)
-    for warning in warnings:
-        print(f'Warning: {warning}')
+        warnings = validate_directory(args.directory)
+        for warning in warnings:
+            print(f'Warning: {warning}')
 
-    distribution = analyse_directory(args.directory)
+        distribution = analyse_directory(args.directory)
 
-    plot_charts(distribution)
+        plot_charts(distribution)
+    except Exception as e:
+        print("Exception: ", e)
 
 
 if __name__ == "__main__":

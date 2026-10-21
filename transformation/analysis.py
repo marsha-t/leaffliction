@@ -61,7 +61,7 @@ def compute_landmarks(contour, n_landmarks):
     right_idx = np.argmax(pts[:, 0])
     i1, i2 = sorted((left_idx, right_idx))
     path_a = pts[i1:i2 + 1]
-    path_b = np.vstack([pts[i2:], pts[:i1 + 1]])
+    path_b = np.vstack([pts[i2:], pts[:i1 + 1]])[::-1]
     if path_a[:, 1].mean() <= path_b[:, 1].mean():
         top_path, bottom_path = path_a, path_b
     else:
@@ -76,19 +76,22 @@ def compute_landmarks(contour, n_landmarks):
     return landmarks
 
 
-def colour_histogram(img):
+def colour_histogram(img, mask):
     """
-    Compute the image colors frequencies
+    Compute colour frequencies for pixels within the leaf mask.
 
     Args:
-        image (np.ndarray): original image (in BGR)
+        img (np.ndarray): Original image in BGR format
+        mask (np.ndarray): Binary leaf mask (255 = leaf, 0 = background)
 
-    Returns :
-        histogram data: dict that contain frequencies and plotting colors
+    Returns:
+        dict: Colour frequencies and plotting colours
     """
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    pixels = hsv.reshape(-1, 3)
-    hue = pixels[:, 0]
+
+    hue = hsv[:, :, 0]
+    leaf_pixels = mask > 0
+
     ranges = {
         "red": (0, 10),
         "orange": (11, 25),
@@ -98,12 +101,14 @@ def colour_histogram(img):
         "blue": (101, 130),
         "purple": (131, 160),
         "pink": (161, 179)
-            }
+    }
+
     frequencies = {}
 
     for color, (low, high) in ranges.items():
-        mask = (hue >= low) & (hue <= high)
-        frequencies[color] = np.sum(mask)
+        color_mask = leaf_pixels & (hue >= low) & (hue <= high)
+        frequencies[color] = int(np.sum(color_mask))
+
     bar_colors = [
         "red",
         "orange",
@@ -114,7 +119,10 @@ def colour_histogram(img):
         "purple",
         "pink"
     ]
-    histogram_data = {}
-    histogram_data["frequencies"] = frequencies
-    histogram_data["bar_colors"] = bar_colors
+
+    histogram_data = {
+        "frequencies": frequencies,
+        "bar_colors": bar_colors
+    }
+
     return histogram_data

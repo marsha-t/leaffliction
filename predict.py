@@ -7,8 +7,9 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 
 from classification.models import create_model
 from classification.transforms import create_transform
-from classification.explainability import calculate_heatmap, calculate_attention_rollout
-import numpy as np
+from classification.explainability import (
+    calculate_heatmap, calculate_attention_rollout
+)
 
 
 def parse_arguments():
@@ -51,7 +52,9 @@ def load_checkpoint(checkpoint_path, device):
             - transform: Image preprocessing transform
             - index_to_class: Mapping from class indices to class names
     """
-    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
+    checkpoint = torch.load(
+        checkpoint_path, map_location=device, weights_only=True
+    )
 
     model = create_model(
         checkpoint['model_type'],
@@ -75,7 +78,7 @@ def load_checkpoint(checkpoint_path, device):
     }
 
     return {
-        'model': model, 
+        'model': model,
         'model_type': checkpoint['model_type'],
         'preprocessing': preprocessing,
         'transform': transform,
@@ -132,11 +135,16 @@ def predict(transformed_image, device, model, index_to_class):
 
 
 def display_prediction(
-    model_type, original_image, denorm_image, predicted_class, predicted_index, model,transformed_image,heatmap
+    model_type,
+    original_image,
+    denorm_image,
+    predicted_class,
+    model,
+    heatmap
 ):
     """
     Display original and transformed images alongside the
-    model's predicted class. 
+    model's predicted class
     Also shows the Grad-CAM overlay
 
     Args:
@@ -175,7 +183,9 @@ def display_prediction(
     if model_type == "custom_vit":
         rollout_heatmap = calculate_attention_rollout(model)
         print(rollout_heatmap.shape)
-        overlay = show_cam_on_image(denorm_image.numpy(), heatmap, use_rgb=True)
+        overlay = show_cam_on_image(
+            denorm_image.numpy(), heatmap, use_rgb=True
+        )
         axes[3].imshow(overlay)
         axes[3].set_title('Attention-Rollout')
     plt.show()
@@ -186,47 +196,46 @@ def main():
     Load a checkpoint, run inference on an image, and display
     the original image, preprocessed image, and predicted class.
     """
-    args = parse_arguments()
-    image_path = Path(args.image).resolve()
-    device = torch.device(
-        'cuda' if torch.cuda.is_available() else 'cpu'
-    )
-
-    loaded = load_checkpoint(args.checkpoint, device)
-
-    with Image.open(image_path) as image:
-        original_image = image.convert('RGB')
-        transformed_image = loaded['transform'](original_image)
-        print("the shape of the transformed image",transformed_image.shape)
-        denorm_image = denormalize_image(
-            transformed_image,
-            loaded['preprocessing']['mean'],
-            loaded['preprocessing']['std']
+    try:
+        args = parse_arguments()
+        image_path = Path(args.image).resolve()
+        device = torch.device(
+            'cuda' if torch.cuda.is_available() else 'cpu'
         )
-    predicted_index, predicted_class = predict(
-        transformed_image,
-        device,
-        loaded['model'],
-        loaded['index_to_class']
-    )
-    heatmap = calculate_heatmap(
-        loaded['model'],
-        transformed_image,
-        predicted_index,
-        loaded['model_type']
-    )
 
-    display_prediction(
-        loaded['model_type'],
-        original_image,
-        denorm_image,
-        predicted_class,
-        predicted_index,
-        loaded['model'],
-        transformed_image,
-        heatmap
+        loaded = load_checkpoint(args.checkpoint, device)
 
-    )
+        with Image.open(image_path) as image:
+            original_image = image.convert('RGB')
+            transformed_image = loaded['transform'](original_image)
+            denorm_image = denormalize_image(
+                transformed_image,
+                loaded['preprocessing']['mean'],
+                loaded['preprocessing']['std']
+            )
+        predicted_index, predicted_class = predict(
+            transformed_image,
+            device,
+            loaded['model'],
+            loaded['index_to_class']
+        )
+        heatmap = calculate_heatmap(
+            loaded['model'],
+            transformed_image,
+            predicted_index,
+            loaded['model_type']
+        )
+
+        display_prediction(
+            loaded['model_type'],
+            original_image,
+            denorm_image,
+            predicted_class,
+            loaded['model_type'],
+            heatmap
+        )
+    except Exception as e:
+        print('Exception: ', e)
 
 
 if __name__ == "__main__":
