@@ -15,7 +15,7 @@ from transformation.analysis import (
     colour_histogram
 )
 from transformation.visualisation import (
-    render_pipeline, display_pipeline, save_pipeline
+    render_pipeline, display_pipeline, save_pipeline, render_specified_pipeline
 )
 
 
@@ -35,6 +35,20 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Analyse leaf shape and colour and display transformations'
     )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--mask", action="store_const",
+                        dest="transformation_type",const="mask")
+    group.add_argument("--landmark", action="store_const" ,
+                       dest="transformation_type",const="landmark")
+    group.add_argument("--blur", action="store_const" ,
+                       dest="transformation_type", const="blur")
+    group.add_argument("--roi", action="store_const" ,
+                       dest="transformation_type",const="roi")
+    group.add_argument("--contour", action="store_const" ,
+                       dest="transformation_type",const="contour")
+    group.add_argument("--histogram", action="store_const" ,
+                       dest="transformation_type",const="histogram")
+
     parser.add_argument('path', help='image or directory path')
     parser.add_argument(
         "--dst", "-dst",
@@ -132,7 +146,7 @@ def transformation_pipeline(image):
     return pipeline
 
 
-def process_directory(src, dst):
+def process_directory(src, dst, transform_type=None):
     """
     Process images in a source directory and save transformations.
     """
@@ -156,7 +170,10 @@ def process_directory(src, dst):
             continue
 
         pipeline = transformation_pipeline(image)
-        images = render_pipeline(image, pipeline)
+        if type== None:
+            images = render_pipeline(image, pipeline)
+        else:
+            images = render_specified_pipeline(image, pipeline,transform_type)
 
         save_pipeline(images, image_path, dst)
 
@@ -169,6 +186,8 @@ def main():
         args = parse_args()
 
         path = Path(args.path)
+        transform_type = args.transformation_type  
+            
         if path.is_file():
             image = cv2.imread(args.path)  # OpenCV manages file internally
             if image is None:
@@ -177,7 +196,7 @@ def main():
             images = render_pipeline(image, pipeline)
             display_pipeline(images)
         elif path.is_dir():
-            process_directory(Path(path), Path(args.dst))
+            process_directory(Path(path), Path(args.dst), transform_type)
         else:
             raise FileNotFoundError(f'Invalid path: {path}')
     except Exception as e:

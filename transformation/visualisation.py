@@ -193,6 +193,13 @@ def render_pipeline(original_image, pipeline):
     return images
 
 
+def render_specified_pipeline(original_image, pipeline, transform_type ):
+    images = {
+            "original": original_image,
+            transform_type: pipeline[transform_type]}
+    return images
+
+
 def display_pipeline(images):
     """
     Display transformed images =
@@ -200,7 +207,7 @@ def display_pipeline(images):
     Args:
         images (dict): {transformation names: RGB images}
     """
-    fig, axes = plt.subplots(4, 2, figsize=(16, 8))
+    fig, axes = plt.subplots(2, 4, figsize=(16, 8))
     axes = axes.flatten()
 
     fig.suptitle('Transformation')
@@ -208,7 +215,8 @@ def display_pipeline(images):
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         ax.imshow(rgb_image)
         ax.set_title(name.replace("_", " ").title())
-
+    
+    axes[7].axis("off")
     plt.show()
 
 
