@@ -17,5 +17,5 @@ __all__ = [
     'measure_leaf',
     'compute_landmarks',
     'colour_histogram',
-    'display_pipeline'
+    'display_pipeline',
 ]

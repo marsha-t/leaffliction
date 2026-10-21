@@ -6,6 +6,7 @@ import torch
 
 
 def calculate_attention_rollout(model, image_size=(224, 224)):
+    """create a heatmap for attention rollout """
     attention_matrices = [
         block.last_attention
         for block in model.encoders
@@ -31,7 +32,7 @@ def calculate_attention_rollout(model, image_size=(224, 224)):
     cls_token = rollout[:,0,1:]
     B, N= cls_token.shape
     grid_size = math.isqrt(N)
-    assert grid_size**2 == N 
+    assert grid_size**2 == N (leafEnv) 
     heatmap = cls_token.reshape(B, 1,grid_size,grid_size)
     heatmap = F.interpolate(heatmap, size=image_size, mode="bilinear",
                             align_corners=False)
