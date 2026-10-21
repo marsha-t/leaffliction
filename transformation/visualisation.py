@@ -200,11 +200,33 @@ def render_specified_pipeline(original_image, pipeline, transform_type ):
         Args:
             images (dict): {transformation names: RGB images}
     """
+    tranformed_image= {}
     if transform_type not in pipeline:
         raise ValueError(f"Unknown transformation type: {transform_type}")
+    if transform_type == "mask":
+         tranformed_image[transform_type]= draw_mask(original_image, pipeline["mask"])
+    if transform_type == "landmarks":
+             tranformed_image[transform_type]= draw_landmarks(
+            original_image, pipeline["landmarks"])
+    if transform_type == "blur":
+        tranformed_image[transform_type]=pipeline["blur"]
+    if transform_type == "roi":
+            tranformed_image[transform_type]= draw_roi(
+                        original_image, pipeline["mask"], pipeline["roi"])
+    if transform_type == "analysis":
+           tranformed_image[transform_type] = draw_analysis(
+            original_image,
+            pipeline["contour"],
+            pipeline["measurements"]
+        )
+    if transform_type=="histogram":
+        tranformed_image[transform_type]= plot_histogram(
+                original_image, pipeline["histogram"])
+    
+    
     images = {
             "original": original_image,
-            transform_type: pipeline[transform_type]}
+            transform_type: tranformed_image[transform_type]}
     return images
 
 
