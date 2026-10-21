@@ -193,37 +193,37 @@ def render_pipeline(original_image, pipeline):
     return images
 
 
-def render_specified_pipeline(original_image, pipeline, transform_type ):
+def render_specified_pipeline(original_image, pipeline, transform_type):
     """
         Display transformed images =
-    
+
         Args:
             images (dict): {transformation names: RGB images}
     """
-    tranformed_image= {}
+    tranformed_image = {}
     if transform_type not in pipeline:
         raise ValueError(f"Unknown transformation type: {transform_type}")
     if transform_type == "mask":
-         tranformed_image[transform_type]= draw_mask(original_image, pipeline["mask"])
+        tranformed_image[transform_type] = draw_mask(original_image, pipeline
+                                                     ["mask"])
     if transform_type == "landmarks":
-             tranformed_image[transform_type]= draw_landmarks(
+        tranformed_image[transform_type] = draw_landmarks(
             original_image, pipeline["landmarks"])
     if transform_type == "blur":
-        tranformed_image[transform_type]=pipeline["blur"]
+        tranformed_image[transform_type] = pipeline["blur"]
     if transform_type == "roi":
-            tranformed_image[transform_type]= draw_roi(
+        tranformed_image[transform_type] = draw_roi(
                         original_image, pipeline["mask"], pipeline["roi"])
-    if transform_type == "analysis":
-           tranformed_image[transform_type] = draw_analysis(
+    if transform_type == "contour":
+        tranformed_image[transform_type] = draw_analysis(
             original_image,
             pipeline["contour"],
             pipeline["measurements"]
         )
-    if transform_type=="histogram":
-        tranformed_image[transform_type]= plot_histogram(
+    if transform_type == "histogram":
+        tranformed_image[transform_type] = plot_histogram(
                 original_image, pipeline["histogram"])
-    
-    
+
     images = {
             "original": original_image,
             transform_type: tranformed_image[transform_type]}
@@ -245,7 +245,7 @@ def display_pipeline(images):
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         ax.imshow(rgb_image)
         ax.set_title(name.replace("_", " ").title())
-    
+
     axes[7].axis("off")
     plt.show()
 

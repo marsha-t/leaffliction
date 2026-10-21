@@ -146,7 +146,8 @@ def create_augmentation_plan(dataset, targets, augmentations_list, seed=42):
             )
         planned = 0
         while planned < target:
-            image_paths = sorted(used_augmentations)
+            image_paths = s
+            
             rng.shuffle(image_paths)
 
             for image_path in image_paths:

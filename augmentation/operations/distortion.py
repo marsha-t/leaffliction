@@ -191,7 +191,6 @@ def grid_distortion(img, grid_size, strength, seed=None):
                     map_x[y, x] = x + dx
                     map_y[y, x] = y + dy
 
-    # Apply distortion
     distorted = cv2.remap(
         img_arr,
         map_x,
