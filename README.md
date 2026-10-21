@@ -123,11 +123,17 @@ The balanced dataset is written to `augmented_directory/`.
 
 ### Apply Transformations 
 
-Apply and visualise the image-transformation pipeline on a single image:
+Display all transformations for one image
 
 ```bash
 python Transformation.py 'data/Apple/Apple_Black_rot/image (1).JPG'
 ```
+
+Save all transformations from a directory
+```bash
+python Transformation.py 'demo_images' --dst transformation_outputs
+```
+
 
 ### Train a classifier
 
@@ -155,7 +161,7 @@ python predict.py demo_images/predict_apple_scab.JPG --checkpoint checkpoints/cu
 
 ### Restore the dateset
 
-Remove generated augmentation outputs and restore the dataset to its original state:
+Remove generated augmentation/transformation outputs and restore the dataset to its original state:
 
 ```bash
 python ./Restore.py data/Apple

@@ -86,7 +86,9 @@ def balance_directory(root):
 
 
 def main():
-    """Apply augmentations to an image or balance a dataset from CLI arguments"""
+    """
+    Apply augmentations to an image or balance a dataset from CLI arguments
+    """
     try:
         args = parse_args()
 
