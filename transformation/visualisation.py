@@ -16,8 +16,7 @@ def draw_mask(image, mask):
             appearance and background is white
     """
     result = np.full_like(image, 255)
-    foreground = cv2.bitwise_and(image, image, mask=mask)
-    result[mask > 0] = foreground[mask > 0]
+    result[mask > 0] = image[mask > 0]
     return result
 
 
@@ -34,8 +33,6 @@ def draw_roi(image, mask, roi):
     Returns:
         np.ndarray: Annotated image showing ROI and binary mask
     """
-    annotated = image.copy()
-
     overlay = image.copy()
     overlay[mask > 0] = (0, 255, 0)
     alpha = 0.4
@@ -102,7 +99,6 @@ def draw_landmarks(image, landmarks):
     Args:
         image (np.ndarray): original image
         landmarks: computed pseudolandmarks describing leaf shape
-            # TODO landmarks type to be determined
 
     Returns:
         np.ndarray: Annotate image containing landmarks
@@ -200,7 +196,7 @@ def display_pipeline(images):
     Args:
         images (dict): {transformation names: RGB images}
     """
-    fig, axes = plt.subplots(4, 2, figsize=(16, 8))
+    fig, axes = plt.subplots(2, 4, figsize=(16, 8))
     axes = axes.flatten()
 
     fig.suptitle('Transformation')

@@ -132,7 +132,7 @@ def create_augmentation_plan(dataset, targets, augmentations_list, seed=42):
         plan[class_name] = []
         target = targets[class_name]
         images = dataset[class_name]
-        used_augmentations = {
+        image_and_augmentations = {
             image_path: set(used) for image_path, used in images.items()
         }
 
@@ -146,14 +146,14 @@ def create_augmentation_plan(dataset, targets, augmentations_list, seed=42):
             )
         planned = 0
         while planned < target:
-            image_paths = sorted(used_augmentations)
+            image_paths = sorted(image_and_augmentations)
             rng.shuffle(image_paths)
 
             for image_path in image_paths:
                 if planned >= target:
                     break
 
-                used = used_augmentations[image_path]
+                used = image_and_augmentations[image_path]
 
                 available_names = [
                     augmentation_name

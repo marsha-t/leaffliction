@@ -155,8 +155,6 @@ Run inference using a checkpoint produced by `train.py`:
 
 ```bash
 python predict.py demo_images/predict_apple_black_rot.JPG --checkpoint checkpoints/custom_cnn/baseline_apple/best.pt
-python predict.py demo_images/predict_apple_rust.JPG --checkpoint checkpoints/custom_cnn/baseline_apple/best.pt
-python predict.py demo_images/predict_apple_scab.JPG --checkpoint checkpoints/custom_cnn/baseline_apple/best.pt
 ```
 
 ### Restore the dateset

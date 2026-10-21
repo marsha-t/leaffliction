@@ -118,7 +118,7 @@ def transformation_pipeline(image):
     roi = extract_roi(contour)
     measurements = measure_leaf(contour)
     landmarks = compute_landmarks(contour, 50)
-    histogram = colour_histogram(image)
+    histogram = colour_histogram(image, mask)
 
     pipeline = {
         "blur": blurred,
