@@ -38,14 +38,14 @@ def parse_args():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--mask", action="store_const",
                         dest="transformation_type",const="mask")
-    group.add_argument("--landmark", action="store_const" ,
-                       dest="transformation_type",const="landmark")
+    # group.add_argument("--landmarks", action="store_const" ,
+    #                    dest="transformation_type",const="landmarks")
     group.add_argument("--blur", action="store_const" ,
                        dest="transformation_type", const="blur")
-    group.add_argument("--roi", action="store_const" ,
-                       dest="transformation_type",const="roi")
-    group.add_argument("--contour", action="store_const" ,
-                       dest="transformation_type",const="contour")
+    # group.add_argument("--roi", action="store_const" ,
+    #                    dest="transformation_type",const="roi")
+    # group.add_argument("--contour", action="store_const" ,
+    #                    dest="transformation_type",const="contour")
     group.add_argument("--histogram", action="store_const" ,
                        dest="transformation_type",const="histogram")
 
@@ -170,7 +170,7 @@ def process_directory(src, dst, transform_type=None):
             continue
 
         pipeline = transformation_pipeline(image)
-        if type== None:
+        if transform_type== None:
             images = render_pipeline(image, pipeline)
         else:
             images = render_specified_pipeline(image, pipeline,transform_type)

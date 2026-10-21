@@ -194,6 +194,14 @@ def render_pipeline(original_image, pipeline):
 
 
 def render_specified_pipeline(original_image, pipeline, transform_type ):
+    """
+        Display transformed images =
+    
+        Args:
+            images (dict): {transformation names: RGB images}
+    """
+    if transform_type not in pipeline:
+        raise ValueError(f"Unknown transformation type: {transform_type}")
     images = {
             "original": original_image,
             transform_type: pipeline[transform_type]}
