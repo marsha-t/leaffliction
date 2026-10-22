@@ -29,15 +29,15 @@ def calculate_attention_rollout(model, image_size=(224, 224)):
                                     dtype=attention.dtype).unsqueeze(0)
         attention = attention + identity_matrix
         attention = attention / torch.sum(attention, dim=-1, keepdim=True)
-        if rollout == None :
+        if rollout is None:
             rollout = attention
         else:
             rollout = torch.bmm(attention, rollout)
-    cls_token = rollout[:,0,1:]
-    B, N= cls_token.shape
+    cls_token = rollout[:, 0, 1:]
+    B, N = cls_token.shape
     grid_size = math.isqrt(N)
     assert grid_size**2 == N
-    heatmap = cls_token.reshape(B, 1,grid_size,grid_size)
+    heatmap = cls_token.reshape(B, 1, grid_size, grid_size)
     heatmap = F.interpolate(heatmap, size=image_size, mode="bilinear",
                             align_corners=False)
     heatmap = heatmap[:, 0]
@@ -45,7 +45,7 @@ def calculate_attention_rollout(model, image_size=(224, 224)):
         dim=(1, 2),
         keepdim=True
     )
-    heatmap = heatmap/(  heatmap.amax(dim=(1, 2), keepdim=True) + 1e-8)
+    heatmap = heatmap/(heatmap.amax(dim=(1, 2), keepdim=True) + 1e-8)
     print("attention.shape", heatmap.shape)
     return heatmap.squeeze(0)
 

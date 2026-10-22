@@ -4,7 +4,7 @@ import math
 
 
 class EncoderBlock(nn.Module):
-    """ 
+    """
     processes image patch embeddings using multi-head self-attention
     to capture relationships between patches, followed by a feed-forward
     neural network (MLP) to transform the learned representations.
@@ -12,10 +12,11 @@ class EncoderBlock(nn.Module):
     def __init__(self, embed_dim=512, head_nums=8):
         """
         Initialise the EncoderBlock
-        
+
            Args:
               embed_dim (int): Dimension of each token embedding.
-              head_nums (int): Number of attention heads in multi-head self-attention.
+              head_nums (int): Number of attention heads in
+              multi-head self-attention.
         """
         super().__init__()
         self.embed_dim = embed_dim
@@ -35,7 +36,7 @@ class EncoderBlock(nn.Module):
             nn.Dropout(0.1))
 
     def forward(self, x):
-        """ 
+        """
         Applies multi-head self-attention and a feed-forward MLP,
         with layer normalization and residual connections.
 
@@ -43,7 +44,7 @@ class EncoderBlock(nn.Module):
             x (torch.Tensor): Input token embeddings of shape
                             (batch_size, num_tokens, embed_dim).
         Returns:
-            torch.Tensor: Updated token embeddings with the same    
+           torch.Tensor: Updated token embeddings with the same
             shape as the input.
        """
         B = x.shape[0]
@@ -71,13 +72,13 @@ class EncoderBlock(nn.Module):
         output = output.reshape(B, patch_nums, -1)
         output = self.WO(output)
 
-        patches =  residual + output
+        patches = residual + output
         residual = patches
 
         patches = self.layer_norm2(patches)
 
         patches = self.mlp(patches)
-   
+
         patches = residual + patches
         return patches
 
@@ -90,7 +91,8 @@ class VisionTransformer(nn.Module):
         CLS and positional embeddings. The tokens pass through Transformer
         encoder blocks, and the final CLS token is used for classification.
     """
-    def __init__(self, patch_size=16, channels=3, embed_dim=512, image_size=224, head_nums=8):
+    def __init__(self, patch_size=16, channels=3,
+                 embed_dim=512, image_size=224, head_nums=8):
         """
         Initializes the Vision Transformer architecture.
 
@@ -122,11 +124,11 @@ class VisionTransformer(nn.Module):
         take the image and split it into patches it pased on the patch
         size and return then flatten patches
         Args:
-            images(tensor): batch of images 
+            images(tensor): batch of images
             """
         B, C, H, W = images.shape
         patches = (images.unfold(2, self.patch_size, self.patch_size)
-                        .unfold(3, self.patch_size, self.patch_size))
+                   .unfold(3, self.patch_size, self.patch_size))
         patches = patches.permute(0, 2, 3, 1, 4, 5)
         patches = patches.reshape(B, self.patch_nums, -1)
         return patches
@@ -154,7 +156,7 @@ class VisionTransformer(nn.Module):
 
         for encoder in self.encoders:
             all_patches = encoder(all_patches)
-            cls_token = all_patches[:,0]
+            cls_token = all_patches[:, 0]
             logits = self.classifier(cls_token)
-    
+
         return logits

@@ -3,6 +3,7 @@ from .pretrained_cnn import PretrainedResNet18
 from .custom_vit import VisionTransformer
 from .pretrained_vit import Pretrained_VisionTransformers
 
+
 def create_model(model_type, num_classes, pretrained=True):
     """
     Create and return model based on specified model_type

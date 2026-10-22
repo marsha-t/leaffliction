@@ -42,12 +42,12 @@ def parse_args():
                        dest="transformation_type", const="landmarks")
     group.add_argument("--blur", action="store_const",
                        dest="transformation_type", const="blur")
-    group.add_argument("--roi", action="store_const" ,
-                       dest="transformation_type",const="roi")
-    group.add_argument("--contour", action="store_const" ,
-                       dest="transformation_type",const="contour")
-    group.add_argument("--histogram", action="store_const" ,
-                       dest="transformation_type",const="histogram")
+    group.add_argument("--roi", action="store_const",
+                       dest="transformation_type", const="roi")
+    group.add_argument("--contour", action="store_const",
+                       dest="transformation_type", const="contour")
+    group.add_argument("--histogram", action="store_const",
+                       dest="transformation_type", const="histogram")
 
     parser.add_argument('path', help='image or directory path')
     parser.add_argument(

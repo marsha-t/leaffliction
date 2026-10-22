@@ -46,7 +46,10 @@ def scan_dataset(root):
 
         images = {}
         for file in sub_dir.iterdir():
-            if not file.is_file() or file.suffix.lower() not in IMAGE_EXTENSIONS:
+            if (
+                not file.is_file()
+                or file.suffix.lower() not in IMAGE_EXTENSIONS
+              ):
                 continue
 
             parsed = parse_augmented_path(file)

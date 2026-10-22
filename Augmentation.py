@@ -64,7 +64,7 @@ def augment_image(path):
 def balance_directory(root):
     """
     Balance dataset using image augmentation
-    Augmented images are saved alongside originals. 
+    Augmented images are saved alongside originals.
     A balanced copy of the dataset is saved in augmented_directory
 
     Args:

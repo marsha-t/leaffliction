@@ -49,7 +49,11 @@ def train_model(
         lr=learning_rate,
         weight_decay=1e-4
     )
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=2, min_lr=1e-6)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+                                                           mode="min",
+                                                           factor=0.5,
+                                                           patience=2,
+                                                           min_lr=1e-6)
 
     for epoch in range(epochs):
         start = perf_counter()

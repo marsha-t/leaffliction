@@ -14,7 +14,8 @@ class ConvBlock(nn.Module):
 
         Args:
             in_channels (int): Number of input feature channels
-            out_channels (int): Number of channels produced by both convolutions
+            out_channels (int): Number of channels produced by both
+            convolutions
         """
         super().__init__()
         self.conv1 = nn.Conv2d(
