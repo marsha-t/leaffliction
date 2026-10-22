@@ -154,7 +154,8 @@ python train.py data/Grape --model pretrained_cnn --run-name baseline_grape
 Run inference using a checkpoint produced by `train.py`:
 
 ```bash
-python predict.py demo_images/predict_apple_black_rot.JPG --checkpoint checkpoints/custom_cnn/baseline_apple/best.pt
+python predict.py demo_images/predict_apple_black_rot.JPG --checkpoint checkpoints/pretrained_cnn/baseline_apple/best.pt
+python predict.py demo_images/predict_grape_black_rot.JPG --checkpoint checkpoints/pretrained_cnn/baseline_grape/best.pt
 ```
 
 ### Restore the dateset
@@ -163,4 +164,5 @@ Remove generated augmentation/transformation outputs and restore the dataset to 
 
 ```bash
 python ./Restore.py data/Apple
+python ./Restore.py data/Apple --evaluation
 ```
