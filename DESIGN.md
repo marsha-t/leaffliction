@@ -213,11 +213,19 @@ guarantee identical model weights or metrics across training runs.
 
 ## custom vision transformers
 ### Preprocessing
-for vision transformers and all the preprocessing i took the image worth 16 X 16 tokens paper 
-and for preprocessing they resize the image into 224 224 and also they normalize the image using the mean and standard deviation they also used random rotation and     to avoid the model from overfitting however i did not implement that as i already used my augmentation technique to balance the data so the data is already augmented 
+
+For the Vision Transformer (ViT), images are resized to **224 × 224 pixels** and divided into **16 × 16 patches**,
+following the original Vision Transformer paper.
+Images are also normalized using the dataset's mean and standard deviation to ensure consistent input values.
+Although data augmentation techniques such as random rotation are commonly applied during training to reduce overfitting and improve generalization, 
+additional augmentation was not included in the preprocessing pipeline, as the dataset had already been augmented using custom techniques to improve class balance.
 
 ### Architecture
-intially i used the most basic architucture and then i was thining of make it biggere based on the performance however my basid architecture well performed and is consist of 6 encoder blocks and for the embedding dimension i used 512 and all the rest of the architecture i used the paper as a reference
+The Vision Transformer (ViT) was initially implemented with a relatively simple architecture, with the intention of increasing its complexity based on model performance. However, the initial architecture achieved satisfactory results, so no further modifications were necessary.
+The model consists of 6 Transformer encoder blocks with an embedding dimension of 512. The remaining architectural components were implemented following the original Vision Transformer paper.
 
 ### Training and Model Selection
-for that i used the same approaches of the custome cnn however to avoid overfitting i used the schedular which is help in reducing the learning rate whenever over fitting has been detected also i started by adam as optimizer but then found out the model is overfitting s i used adam w decay wich elp the weight from getting too large as for the vit that can happen due to model pig structure i also add to avoid overfitting dropouts however it did not change in the performance much there is also class standardization which suggested by the paper however model was not in need for that as thenumber of classes is only 4 
+The Vision Transformer was trained using a similar approach to the custom CNN, with additional techniques introduced to reduce overfitting.
+Initially, the Adam optimizer was used, but after observing signs of overfitting, it was replaced with AdamW, which introduces weight decay to help prevent model weights from becoming excessively large.
+A learning rate scheduler was also implemented to reduce the learning rate when validation performance stopped improving, helping the model converge more effectively.
+Additionally, dropout was introduced as a regularization technique to reduce overfitting. However, it did not significantly improve the model's performance.

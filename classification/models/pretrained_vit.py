@@ -16,7 +16,7 @@ class Pretrained_VisionTransformers(nn.Module):
         self.vit = vit_b_16(weights=weights)
         for param in self.vit.parameters():
             param.requires_grad = False
-        self.vit.heads.head = nn.Linear(768, 8)
+        self.vit.heads.head = nn.Linear(768, 4)
 
     def forward(self, x):
         """

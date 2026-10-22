@@ -139,7 +139,7 @@ class VisionTransformer(nn.Module):
             images (torch.Tensor): Input images of shape (B, 3, 224, 224).
 
         Returns:
-            torch.Tensor: Classification logits of shape (B, 8).
+            torch.Tensor: Classification logits of shape (B, 4).
         """
         B, C, H, W = x.shape
         patches = self.make_patches(x)

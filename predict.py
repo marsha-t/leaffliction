@@ -231,7 +231,7 @@ def main():
             original_image,
             denorm_image,
             predicted_class,
-            loaded['model_type'],
+            loaded['model'],
             heatmap
         )
     except Exception as e:

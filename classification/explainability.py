@@ -6,39 +6,41 @@ import torch
 
 
 def calculate_attention_rollout(model, image_size=(224, 224)):
-    """create a heatmap for attention rollout """
+    """
+    Generate an attention rollout heatmap for a Vision Transformer (ViT).
+
+    Args:
+        model: Trained ViT model with stored attention weights
+        image_size: Target heatmap dimensions (H, W)
+
+    Returns:
+        np.ndarray: Attention rollout heatmap (H, W), normalized to [0, 1]
+    """
     attention_matrices = [
         block.last_attention
         for block in model.encoders
     ]
     rollout = None
     for attention in attention_matrices:
-        # [1, 8, 197, 197]
-        # we will calculate the average for the 8 heads
         attention = torch.mean(attention, dim=1)
-        # [1, 197,197]
         identity_matrix = torch.eye(
                                     attention.shape[1],
                                     device=attention.device,
                                     dtype=attention.dtype).unsqueeze(0)
-        # we need to consider te residual connection and we are assuing it the idenetity matrix
         attention = attention + identity_matrix
-        # we need to normalize
         attention = attention / torch.sum(attention, dim=-1, keepdim=True)
         if rollout == None :
             rollout = attention
-        else :
+        else:
             rollout = torch.bmm(attention, rollout)
     cls_token = rollout[:,0,1:]
     B, N= cls_token.shape
     grid_size = math.isqrt(N)
-    assert grid_size**2 == N (leafEnv) 
+    assert grid_size**2 == N
     heatmap = cls_token.reshape(B, 1,grid_size,grid_size)
     heatmap = F.interpolate(heatmap, size=image_size, mode="bilinear",
                             align_corners=False)
     heatmap = heatmap[:, 0]
-    # normalize using min max
-    # heatmap = rollout
     heatmap = heatmap - heatmap.amin(
         dim=(1, 2),
         keepdim=True
@@ -46,11 +48,18 @@ def calculate_attention_rollout(model, image_size=(224, 224)):
     heatmap = heatmap/(  heatmap.amax(dim=(1, 2), keepdim=True) + 1e-8)
     print("attention.shape", heatmap.shape)
     return heatmap.squeeze(0)
-        
-
 
 
 def reshape_transform(tensor):
+    """
+    Reshape ViT patch embeddings into a spatial feature map for Grad-CAM.
+
+    Args:
+        tensor: ViT output tensor (B, N+1, C), including the CLS token
+
+    Returns:
+        torch.Tensor: Reshaped feature map (B, C, H, W)
+    """
     tensor = tensor[:, 1:, :]
     B, N, D = tensor.shape
     grid_size = math.isqrt(N)
@@ -58,6 +67,7 @@ def reshape_transform(tensor):
     tensor = tensor.reshape(B, grid_size, grid_size, D)
     tensor = tensor.permute(0, 3, 1, 2)
     return tensor
+
 
 def calculate_heatmap(model, input_tensor, predicted_index, model_type):
     """
