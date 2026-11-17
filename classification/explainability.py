@@ -7,14 +7,21 @@ import torch
 
 def calculate_attention_rollout(model, image_size=(224, 224)):
     """
-    Generate an attention rollout heatmap for a Vision Transformer (ViT).
+    Generate an attention rollout heatmap for the custom Vision Transformer.
+
+    Run the model in evaluation mode on a single-image batch before calling
+    this function, so each encoder stores attention weights for that image.
+    The heatmap shows attention propagation from the CLS token to image
+    patches across encoder blocks; it is not specific to a predicted class.
 
     Args:
-        model: Trained ViT model with stored attention weights
-        image_size: Target heatmap dimensions (H, W)
+        model (VisionTransformer): Custom ViT exposing encoders with stored
+            last_attention tensors. The pretrained ViT wrapper is unsupported.
+        image_size (tuple[int, int]): Target heatmap dimensions (H, W).
 
     Returns:
-        np.ndarray: Attention rollout heatmap (H, W), normalized to [0, 1]
+        torch.Tensor: Attention rollout heatmap (H, W) for a single-image
+            batch, normalized to [0, 1], on the model's device.
     """
     attention_matrices = [
         block.last_attention
@@ -46,7 +53,6 @@ def calculate_attention_rollout(model, image_size=(224, 224)):
         keepdim=True
     )
     heatmap = heatmap/(heatmap.amax(dim=(1, 2), keepdim=True) + 1e-8)
-    print("attention.shape", heatmap.shape)
     return heatmap.squeeze(0)
 
 
@@ -92,6 +98,10 @@ def calculate_heatmap(model, input_tensor, predicted_index, model_type):
 
     elif model_type == "custom_vit":
         target_layers = [model.encoders[-1].layer_norm1]
+        reshape_fn = reshape_transform
+
+    elif model_type == "pretrained_vit":
+        target_layers = [model.vit.encoder.layers[-1].ln_1]
         reshape_fn = reshape_transform
 
     else:

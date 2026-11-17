@@ -11,6 +11,8 @@ def create_model(model_type, num_classes, pretrained=True):
     Args:
         model_type (str): Type of model to create
         num_classes (int): Number of output classes
+        pretrained (bool): Load ImageNet weights for pretrained architectures.
+            Ignored for custom architectures.
 
     Returns:
         nn.Module: The initialized PyTorch model
@@ -23,8 +25,10 @@ def create_model(model_type, num_classes, pretrained=True):
     if model_type == 'pretrained_cnn':
         return PretrainedResNet18(num_classes, pretrained=pretrained)
     if model_type == 'custom_vit':
-        return VisionTransformer()
+        return VisionTransformer(num_classes)
     if model_type == 'pretrained_vit':
-        return Pretrained_VisionTransformers()
+        return Pretrained_VisionTransformers(
+            num_classes, pretrained=pretrained
+        )
 
     raise ValueError(f'Unknown model type: {model_type}')

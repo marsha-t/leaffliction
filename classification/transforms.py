@@ -12,8 +12,8 @@ def get_preprocessing_config(
         class_to_index=None):
     """
     Determine preprocessing configuration for given model:
-    - For custom CNN, normalisation statistics are computed from training
-        dataset
+    - For custom CNN and ViT, normalisation statistics are computed from the
+        training dataset
     - For pretrained models, normalisation statistics are retrieved for the
         given pretrained model
 
@@ -88,7 +88,7 @@ def create_transform(model_type, preprocessing):
 
 def create_custom_transform(mean, std):
     """
-    Create image transformation pipeline for custom CNN model
+    Create the shared image transformation pipeline for custom CNN and ViT
 
     Args:
         mean (sequence of float): Per-channel mean values used for
@@ -97,7 +97,8 @@ def create_custom_transform(mean, std):
             normalization
 
     Returns:
-        transforms.Compose: Transformation pipeline for the custom CNN
+        transforms.Compose: Resize to 224 by 224, convert to a tensor, and
+            normalise using the supplied channel statistics
     """
     return transforms.Compose([
         transforms.Resize((224, 224)),

@@ -145,7 +145,9 @@ def display_prediction(
     """
     Display original and transformed images alongside the
     model's predicted class
-    Also shows the Grad-CAM overlay
+    Show three panels, adding a fourth for custom ViT attention rollout.
+    Fixed 256 by 256 axis limits show the size of the 224 by 224
+    preprocessed image within the display area.
 
     Args:
         model_type (str): Model type name
@@ -153,8 +155,14 @@ def display_prediction(
         denorm_image (torch.Tensor): Denormalised image tensor
             of shape (H, W, C), with values in [0, 1]
         predicted_class (str): Predicted class name
+        model (torch.nn.Module): Model in evaluation mode. For custom ViT,
+            encoder attention weights must be stored by a preceding forward
+            pass on the image being displayed.
+        heatmap (numpy.ndarray): Grad-CAM heatmap with shape (H, W),
+            normalised to [0, 1] and aligned with denorm_image
     """
-    fig, axes = plt.subplots(1, 4, figsize=(10, 5))
+    num_panels = 4 if model_type == "custom_vit" else 3
+    fig, axes = plt.subplots(1, num_panels, figsize=(2.5 * num_panels, 5))
     fig.suptitle(f'Classification with {model_type}')
 
     axes[0].imshow(original_image)
@@ -182,9 +190,9 @@ def display_prediction(
     )
     if model_type == "custom_vit":
         rollout_heatmap = calculate_attention_rollout(model)
-        print(rollout_heatmap.shape)
+        rollout_heatmap = rollout_heatmap.detach().cpu().numpy()
         overlay = show_cam_on_image(
-            denorm_image.numpy(), heatmap, use_rgb=True
+            denorm_image.numpy(), rollout_heatmap, use_rgb=True
         )
         axes[3].imshow(overlay)
         axes[3].set_title('Attention-Rollout')

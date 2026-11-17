@@ -1,10 +1,13 @@
-# Leaffliction [Work in Progress]
+# Leaffliction
 
 An image-processing and machine-learning pipeline for plant-disease classification from leaf images, built in Python and PyTorch.
 
 The project follows the [Leaffliction project subject](leaffliction.pdf),
 which structures the work into four parts: dataset analysis, augmentation,
 image transformation, and classification.
+
+Some implementation details reflect the project's submission and evaluation 
+requirements (e.g., the creation of a balanced dataset output in `augmented_directory/`).
 
 ### 1. Dataset analysis
 
@@ -20,9 +23,18 @@ Segment leaves and visualise contours, landmarks, shape measurements, and colour
 
 ### 4. Classification
 
-Train and evaluate image classifiers in PyTorch and run inference from saved checkpoints. The training pipeline splits data before augmentation, records splits in CSV manifests, computes normalisation statistics from training data only, and keeps experiment outputs separate.
+Train and evaluate four image classifiers: a custom CNN, pretrained ResNet18,
+a custom Vision Transformer, and pretrained ViT-B/16. Custom models are trained
+from scratch; pretrained models use frozen ImageNet backbones with trainable
+classification heads.
 
-The current implementation includes a custom CNN. Planned experiments include pretrained CNNs and vision transformers.
+The pipeline splits original images before augmenting the training set, records
+splits in CSV manifests, and keeps experiment outputs separate. Custom models
+use normalisation statistics computed from training data; pretrained models
+use preprocessing associated with their ImageNet weights.
+
+Each classifier derives its output count from the dataset's class directories.
+Apple and Grape are trained separately, with four classes each.
 
 See [DESIGN.md](DESIGN.md) for implementation decisions and tradeoffs.
 
@@ -38,8 +50,10 @@ project subject, while the implementation is organised into modules by stage:
 - `manifests/` — CSV files recording dataset splits
 - `demo_images/` — example images for running inference
 
-Generated datasets and model checkpoints are kept in
-`augmented_directory/` and `checkpoints/` respectively and are not tracked by Git.
+Dataset balancing creates a balanced copy in `augmented_directory/` and saves
+generated augmentations alongside source images. Classification generates
+training augmentations alongside source images and stores model checkpoints
+in `checkpoints/`. Generated images and checkpoints are not tracked by Git.
 
 ## Setup
 
@@ -137,17 +151,31 @@ python Transformation.py 'demo_images' --dst transformation_outputs
 
 ### Train a classifier
 
-Train the custom CNN and save output in `checkpoints/custom_cnn/baseline/`:
+Choose a model using `--model`:
+
+| `--model` | Architecture | Trainable parameters |
+| --- | --- | --- |
+| `custom_cnn` | Custom CNN | Entire model |
+| `pretrained_cnn` | ResNet18 | Classification head |
+| `custom_vit` | Custom ViT | Entire model |
+| `pretrained_vit` | ViT-B/16 | Classification head |
+
+Train a classifier for Apple or Grape:
 
 ```bash
 python train.py data/Apple --model custom_cnn --run-name baseline_apple
 python train.py data/Grape --model custom_cnn --run-name baseline_grape
 ```
 
-```bash
-python train.py data/Apple --model pretrained_cnn --run-name baseline_apple
-python train.py data/Grape --model pretrained_cnn --run-name baseline_grape
-```
+Outputs are saved under `checkpoints/<model>/<run-name>/`. Each completed run
+produces `best.pt`, selected by lowest validation loss, `last.pt`, and
+`history.json`. Existing run directories cannot be reused.
+
+Training defaults to pretrained ResNet18, 20 epochs, batch size 32, and learning
+rate 0.001. Use `--epochs`, `--batch-size`, and `--learning-rate` to override
+these values.
+
+Pretrained weights are downloaded on first use unless already cached.
 
 ### Predict an image label
 
@@ -158,11 +186,22 @@ python predict.py demo_images/predict_apple_black_rot.JPG --checkpoint checkpoin
 python predict.py demo_images/predict_grape_black_rot.JPG --checkpoint checkpoints/pretrained_cnn/baseline_grape/best.pt
 ```
 
-### Restore the dateset
+Prediction restores the architecture, class mapping, preprocessing, and weights
+from the checkpoint. It displays the original image, preprocessed image,
+predicted class, and Grad-CAM overlay. Custom ViT also displays attention rollout.
 
-Remove generated augmentation/transformation outputs and restore the dataset to its original state:
+### Restore the dataset
+
+Restore the dataset by removing generated augmentations, its classification
+manifest, and generated split symlinks:
 
 ```bash
-python ./Restore.py data/Apple
-python ./Restore.py data/Apple --evaluation
+python Restore.py data/Apple
+```
+
+To prepare for evaluation while preserving the manifest and balanced dataset
+in `augmented_directory/`, use:
+
+```bash
+python Restore.py data/Apple --evaluation
 ```

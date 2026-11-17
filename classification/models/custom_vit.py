@@ -91,12 +91,13 @@ class VisionTransformer(nn.Module):
         CLS and positional embeddings. The tokens pass through Transformer
         encoder blocks, and the final CLS token is used for classification.
     """
-    def __init__(self, patch_size=16, channels=3,
+    def __init__(self, num_classes, patch_size=16, channels=3,
                  embed_dim=512, image_size=224, head_nums=8):
         """
         Initializes the Vision Transformer architecture.
 
         Args:
+            num_classes (int): Number of output classes.
             patch_size (int): Size of each square image patch.
             channels (int): Number of input image channels.
             embed_dim (int): Dimension of each token embedding.
@@ -113,7 +114,7 @@ class VisionTransformer(nn.Module):
         self.cls = nn.Parameter(torch.randn(1, 1, self.embed_dim))
         self.POS = nn.Parameter(torch.randn(1, self.patch_nums+1,
                                             self.embed_dim))
-        self.classifier = nn.Linear(self.embed_dim, 8)
+        self.classifier = nn.Linear(self.embed_dim, num_classes)
         self.encoders = nn.ModuleList([
                                       EncoderBlock(embed_dim=self.embed_dim,
                                                    head_nums=self.head_nums)
@@ -121,11 +122,17 @@ class VisionTransformer(nn.Module):
 
     def make_patches(self, images):
         """
-        take the image and split it into patches it pased on the patch
-        size and return then flatten patches
+        Split a batch of images into flattened, non-overlapping patches
+
         Args:
-            images(tensor): batch of images
-            """
+            images (torch.Tensor): Images with shape
+                (B, channels, image_size, image_size), matching the constructor
+                configuration. image_size must be divisible by patch_size.
+
+        Returns:
+            torch.Tensor: Patches with shape
+                (B, patch_nums, channels * patch_size * patch_size).
+        """
         B, C, H, W = images.shape
         patches = (images.unfold(2, self.patch_size, self.patch_size)
                    .unfold(3, self.patch_size, self.patch_size))
@@ -138,10 +145,12 @@ class VisionTransformer(nn.Module):
         Performs the forward pass through the Vision Transformer.
 
         Args:
-            images (torch.Tensor): Input images of shape (B, 3, 224, 224).
+            x (torch.Tensor): Input images with shape
+                (B, channels, image_size, image_size), matching the constructor
+                configuration. image_size must be divisible by patch_size.
 
         Returns:
-            torch.Tensor: Classification logits of shape (B, 4).
+            torch.Tensor: Classification logits of shape (B, num_classes).
         """
         B, C, H, W = x.shape
         patches = self.make_patches(x)
@@ -156,7 +165,8 @@ class VisionTransformer(nn.Module):
 
         for encoder in self.encoders:
             all_patches = encoder(all_patches)
-            cls_token = all_patches[:, 0]
-            logits = self.classifier(cls_token)
+
+        cls_token = all_patches[:, 0]
+        logits = self.classifier(cls_token)
 
         return logits

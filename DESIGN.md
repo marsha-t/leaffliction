@@ -10,7 +10,11 @@ transformation/   Classical image processing and feature extraction
 classification/   Model training and prediction
 ```
 
-The top-level scripts (e.g., `Distribution.py`) are the command-line entry points required by the subject. 
+Some structural choices follow the project's submission and evaluation
+requirements. Top-level scripts such as `Distribution.py` provide the required
+command-line entry points, while `augmented_directory/` provides a complete
+balanced dataset for demonstrating augmentation. Classification uses its own
+training samples and manifests rather than reading this balanced copy.
 
 This separation keeps the executable scripts focused on parsing arguments and orchestrating the workflow, and encapsulates implementation details within reusable packages. 
 
@@ -134,24 +138,43 @@ Evaluation preparation removes generated images from the source dataset and the 
 
 The preserved manifest allows the classification pipeline to reconstruct the same augmentation plan and regenerate missing training images when training is executed again. This enables evaluation of the classification workflow without requiring `augmented_directory` to be regenerated or modified.
 
-## Custom CNN
+## Classification Overview
 
-### Preprocessing
+Four model architectures share the dataset preparation, training, and prediction
+pipeline:
 
-Images are converted to RGB, resized to 224 × 224 pixels, converted to
-tensors, and normalised using a mean and standard deviation for each colour
-channel. Normalisation statistics are computed from the training samples, including
-training augmentations, after resizing and conversion to tensors.
+| Model | Feature extractor | Training approach |
+| --- | --- | --- |
+| Custom CNN | Four convolutional blocks | Train the entire model |
+| Pretrained CNN | ImageNet ResNet18 | Train a replacement classification head |
+| Custom ViT | Six custom transformer encoder blocks | Train the entire model |
+| Pretrained ViT | ImageNet ViT-B/16 | Train a replacement classification head |
 
-Training, validation, and prediction use the same resizing and
-normalisation pipeline. Prediction restores the normalisation values
-saved in the checkpoint.
+Apple and Grape are classified separately, with four classes per dataset.
+Class names are sorted to produce a deterministic label mapping, shared across
+training and validation and saved in checkpoints. All models receive the number
+of classes through the model factory; their classification heads produce one
+unnormalised score, or logit, per class.
 
-Class names are sorted before assigning integer labels. The mapping is
-shared by the training and validation datasets and stored in the
+## Preprocessing
+
+Custom CNN and custom ViT use RGB images resized directly to 224 × 224 pixels.
+Per-channel normalisation statistics are computed from training samples,
+including training augmentations, after resizing and conversion to tensors.
+Validation images do not contribute to these statistics.
+
+Pretrained ResNet18 and ViT-B/16 use the transforms associated with their
+torchvision weights, including resizing, centre cropping, and normalisation.
+The weight identifier and normalisation values are recorded in checkpoint
+metadata.
+
+Each model uses the same deterministic preprocessing during training,
+validation, and prediction. Augmentations are generated during dataset
+preparation rather than sampled dynamically by the preprocessing transforms.
+Prediction reconstructs preprocessing from the configuration saved in the
 checkpoint.
 
-### Architecture
+## Custom CNN
 
 The feature extractor contains four convolutional blocks with 32, 64, 128,
 and 256 output channels. Each block contains two 3 × 3 convolutions, each
@@ -162,9 +185,45 @@ Global average pooling reduces the final feature maps to a 256-element
 vector per image. A linear layer converts this vector into one
 unnormalised score, or logit, per class.
 
-### Training and Model Selection
+## Custom Vision Transformer
 
-The custom CNN is trained using cross-entropy loss and the AdamW optimiser with a weight decay of 0.0001. The command line controls the learning rate, batch size, and number of epochs.
+The custom ViT divides each 224 × 224 image into 196 non-overlapping 16 × 16
+patches. Each flattened RGB patch is projected into a 512-dimensional embedding.
+A learned CLS token and learned positional embeddings produce a sequence of
+197 tokens.
+
+Six encoder blocks process the sequence. Each block uses eight attention heads,
+LayerNorm before attention and the MLP, residual connections, and an MLP with a
+hidden width four times the embedding dimension. Attention and MLP dropout use
+a probability of 0.1.
+
+After the final encoder block, the CLS token is passed to a linear classification
+head. The implementation does not apply an additional LayerNorm between the
+final encoder block and the classifier.
+
+## Pretrained Models
+
+Both pretrained models use ImageNet weights and frozen feature extractors.
+The original classification head is replaced after freezing, leaving the new
+head trainable. Its input width is obtained from the original head, and its
+output width comes from the dataset's class count.
+
+During ResNet training, backbone BatchNorm layers remain in evaluation mode
+so their running statistics do not change. ViT uses LayerNorm and does not
+require this BatchNorm handling.
+
+Prediction constructs the model with `pretrained=False` before loading
+checkpoint weights. This avoids downloading ImageNet weights that would
+immediately be replaced. The flag controls initial weight loading; it does
+not unfreeze the backbone.
+
+## Training and Model Selection
+
+All four models use cross-entropy loss and AdamW with weight decay 0.0001.
+A `ReduceLROnPlateau` scheduler monitors validation loss after each epoch,
+with factor 0.5, patience 2, and minimum learning rate 0.000001. The same
+training configuration applies to all four architectures. The command line
+controls the learning rate, batch size, and number of epochs.
 
 Training samples are shuffled each epoch. Validation samples are evaluated without shuffling, with the model in evaluation mode and gradient
 calculation disabled.
@@ -183,11 +242,33 @@ Each run produces two checkpoints and a training history file:
 Validation loss determines which checkpoint is considered best. Accuracy is recorded as an additional metric but does not control
 checkpoint selection.
 
-Checkpoints include model weights, optimiser state, epoch number, validation metrics, model type, class mapping, and normalisation
-statistics. Prediction uses the saved model type, weights, class mapping, and normalisation statistics to reconstruct the classifier.
+Checkpoints include model weights, optimiser state, epoch number, validation
+metrics, model type, class mapping, and preprocessing configuration. Prediction
+uses this metadata and the saved weights to reconstruct the classifier.
 
-Although optimiser state is saved, resuming training from a checkpoint is not currently exposed through the command line. Training history is
-written to JSON after the training loop completes, so an interrupted run may have checkpoints without a history file.
+Although optimiser state is saved, scheduler state is not saved and the command
+line does not currently support resuming training. Training history is written
+to JSON after the training loop completes, so an interrupted run may have
+checkpoints without a history file.
+
+## Prediction and Explainability
+
+Prediction restores the model type, class mapping, preprocessing, and model
+weights from checkpoint metadata, then runs classification in evaluation mode.
+
+Grad-CAM is supported for all four architectures. CNNs use their final
+convolutional feature blocks. ViTs use normalised token features before
+attention in the final encoder block; the CLS token is removed and patch
+features are reshaped into a spatial grid.
+
+Custom ViT additionally supports attention rollout, combining head-averaged
+attention across encoder blocks while accounting for residual connections.
+Rollout describes attention propagation and is not specific to the predicted
+class. Pretrained ViT attention rollout is not implemented.
+
+Prediction displays three panels, or four when custom ViT rollout is available.
+All panels retain fixed 256 × 256 axis limits to make the 224 × 224
+preprocessed image size visible.
 
 ## Training Run Organisation
 
@@ -210,22 +291,3 @@ also vary with hardware and execution settings.
 
 A shared manifest therefore preserves the dataset split but does not
 guarantee identical model weights or metrics across training runs.
-
-## custom vision transformers
-### Preprocessing
-
-For the Vision Transformer (ViT), images are resized to **224 × 224 pixels** and divided into **16 × 16 patches**,
-following the original Vision Transformer paper.
-Images are also normalized using the dataset's mean and standard deviation to ensure consistent input values.
-Although data augmentation techniques such as random rotation are commonly applied during training to reduce overfitting and improve generalization, 
-additional augmentation was not included in the preprocessing pipeline, as the dataset had already been augmented using custom techniques to improve class balance.
-
-### Architecture
-The Vision Transformer (ViT) was initially implemented with a relatively simple architecture, with the intention of increasing its complexity based on model performance. However, the initial architecture achieved satisfactory results, so no further modifications were necessary.
-The model consists of 6 Transformer encoder blocks with an embedding dimension of 512. The remaining architectural components were implemented following the original Vision Transformer paper.
-
-### Training and Model Selection
-The Vision Transformer was trained using a similar approach to the custom CNN, with additional techniques introduced to reduce overfitting.
-Initially, the Adam optimizer was used, but after observing signs of overfitting, it was replaced with AdamW, which introduces weight decay to help prevent model weights from becoming excessively large.
-A learning rate scheduler was also implemented to reduce the learning rate when validation performance stopped improving, helping the model converge more effectively.
-Additionally, dropout was introduced as a regularization technique to reduce overfitting. However, it did not significantly improve the model's performance.
