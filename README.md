@@ -38,6 +38,16 @@ Apple and Grape are trained separately, with four classes each.
 
 See [DESIGN.md](DESIGN.md) for implementation decisions and tradeoffs.
 
+#### Model performance
+
+The figure below shows validation accuracy over 20 epochs, with markers indicating the checkpoints selected by minimum validation loss.
+
+![Validation accuracy across four models on Apple and Grape datasets](visualisations/validation_accuracy.svg)
+
+All four models achieved over 94% validation accuracy at their selected checkpoints. Both pretrained models converged quickly and maintained consistently high accuracy, with ViT-B/16 achieving the highest accuracy on both datasets (99.84%). Among the models trained from scratch, the custom CNN reached high accuracy relatively quickly, while the custom ViT improved more gradually and showed greater fluctuations throughout training.
+
+These results are from individual training runs on the validation datasets, rather than an independent test set.
+
 ## Project structure
 
 The root-level scripts provide the command-line entry points required by the
@@ -49,6 +59,7 @@ project subject, while the implementation is organised into modules by stage:
 - `classification/` — data loading, model definitions, training utilities, and preprocessing
 - `manifests/` — CSV files recording dataset splits
 - `demo_images/` — example images for running inference
+- `visualisations/` — training-history plots and the script used to generate them
 
 Dataset balancing creates a balanced copy in `augmented_directory/` and saves
 generated augmentations alongside source images. Classification generates
@@ -176,6 +187,19 @@ rate 0.001. Use `--epochs`, `--batch-size`, and `--learning-rate` to override
 these values.
 
 Pretrained weights are downloaded on first use unless already cached.
+
+
+<details>
+<summary>Training and validation loss curves</summary>
+
+The following figure shows training and validation loss across
+20 epochs for all four models on the Apple and Grape datasets.
+Markers indicate the checkpoints selected by minimum validation loss.
+
+![Training and validation loss](visualisations/training_loss.svg)
+
+</details>
+
 
 ### Predict an image label
 
